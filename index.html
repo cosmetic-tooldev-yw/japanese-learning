@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>N5 日文單字卡</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "PingFang TC", "Segoe UI", sans-serif;
+    background: linear-gradient(160deg, #1c1c1e 0%, #2c2c2e 100%);
+    color: #fff;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+  }
+  #app {
+    max-width: 460px;
+    margin: 0 auto;
+    min-height: 100vh;
+    padding: 16px 16px 28px;
+    display: flex;
+    flex-direction: column;
+  }
+  header { text-align: center; padding: 8px 0 4px; }
+  h1 { font-size: 20px; margin: 0; font-weight: 600; letter-spacing: 0.5px; }
+  .subtitle { font-size: 12px; color: #9a9a9e; margin-top: 4px; }
+
+  .stats-bar {
+    margin-top: 14px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 16px;
+    padding: 12px 14px;
+  }
+  .stats-row { display: flex; justify-content: space-between; font-size: 12px; color: #c7c7cc; margin-bottom: 8px; }
+  .stats-row b { color: #fff; font-size: 13px; }
+  .progress-track { height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; display: flex; }
+  .progress-known { background: #8FA876; height: 100%; transition: width 0.3s; }
+  .progress-review { background: #C17A4D; height: 100%; transition: width 0.3s; }
+
+  .filters {
+    display: flex; gap: 8px; margin-top: 14px;
+  }
+  select {
+    flex: 1;
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 8px;
+    font-size: 13px;
+    text-align: center;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  select option {
+    color: #000;
+    background: #fff;
+  }
+
+  .card-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 18px;
+    min-height: 260px;
+  }
+  .card-counter { font-size: 12px; color: #8e8e93; margin-bottom: 10px; }
+  .card-scene {
+    width: 100%;
+    max-width: 340px;
+    height: 230px;
+    perspective: 1200px;
+  }
+  .card {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.45s cubic-bezier(.4,.2,.2,1);
+    cursor: pointer;
+  }
+  .card.flipped { transform: rotateY(180deg); }
+  .face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    border-radius: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+  }
+  .face-front {
+    background: linear-gradient(145deg, #3a3a3c, #232325);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .face-back {
+    background: linear-gradient(145deg, #f6efe0, #efe4cf);
+    color: #2b2b2d;
+    transform: rotateY(180deg);
+  }
+  .face-back .tag {
+    background: rgba(43,43,45,0.08);
+    color: #2b2b2d;
+  }
+  .tag {
+    position: absolute;
+    top: 14px; left: 14px;
+    font-size: 11px;
+    background: rgba(255,255,255,0.12);
+    padding: 4px 10px;
+    border-radius: 100px;
+    color: #d0d0d5;
+  }
+  .status-dot {
+    position: absolute;
+    top: 14px; right: 14px;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+  }
+  .word-main { font-size: 38px; font-weight: 600; text-align: center; line-height: 1.3; }
+  .tap-hint { font-size: 11px; color: #8e8e93; margin-top: 10px; }
+  .reading { font-size: 22px; font-weight: 500; margin-bottom: 4px; opacity: 0.85; color: #2b2b2d; }
+  .romaji { font-size: 13px; font-style: italic; opacity: 0.55; margin-bottom: 10px; color: #2b2b2d; }
+  .meaning { font-size: 26px; font-weight: 700; color: #2b2b2d; }
+
+  .actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    width: 100%;
+    max-width: 340px;
+  }
+  .actions button {
+    flex: 1;
+    border: none;
+    border-radius: 16px;
+    padding: 14px 8px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .btn-review { background: #C17A4D; color: #fff; }
+  .btn-known { background: #8FA876; color: #fff; }
+
+  .nav-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    margin-top: 18px;
+  }
+  .nav-btn {
+    background: rgba(255,255,255,0.08);
+    border: none;
+    color: #fff;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .nav-btn:active { background: rgba(255,255,255,0.18); }
+  .shuffle-btn {
+    background: rgba(255,255,255,0.08);
+    border: none;
+    color: #fff;
+    border-radius: 100px;
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+  .shuffle-btn.active { background: #fff; color: #1c1c1e; }
+
+  .footer-row {
+    display: flex; justify-content: center; margin-top: 18px;
+  }
+  .reset-link { font-size: 12px; color: #636366; background: none; border: none; padding: 6px; }
+
+  .empty-state {
+    text-align: center; color: #8e8e93; font-size: 14px; padding: 40px 20px;
+  }
+  .save-indicator {
+    position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%);
+    font-size: 11px; color: #636366; opacity: 0; transition: opacity 0.3s;
+  }
+  .save-indicator.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>N5 単語カード</h1>
+    <div class="subtitle">N5 日文單字卡 ・ 進度自動儲存</div>
+  </header>
+
+  <div class="stats-bar">
+    <div class="stats-row">
+      <span>整體進度</span>
+      <span><b id="statKnown">0</b> 已熟悉 ・ <b id="statReview">0</b> 需加強 ・ <b id="statTotal">0</b> 總數</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-known" id="progKnown" style="width:0%"></div>
+      <div class="progress-review" id="progReview" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div class="filters">
+    <select id="categoryFilter"></select>
+    <select id="statusFilter">
+      <option value="all">全部狀態</option>
+      <option value="new">未學習</option>
+      <option value="review">需加強</option>
+      <option value="known">已熟悉</option>
+    </select>
+  </div>
+
+  <div class="card-area" id="cardArea">
+    <!-- populated by JS -->
+  </div>
+
+  <div class="nav-row">
+    <button class="nav-btn" id="prevBtn">‹</button>
+    <button class="shuffle-btn" id="shuffleBtn">隨機</button>
+    <button class="nav-btn" id="nextBtn">›</button>
+  </div>
+
+  <div class="footer-row">
+    <button class="reset-link" id="resetBtn">清除全部進度</button>
+  </div>
+</div>
+<div class="save-indicator" id="saveIndicator">已儲存</div>
+
+<script>
+const VOCAB = [
+  {id:1,kanji:"食べる",reading:"たべる",romaji:"taberu",meaning:"吃",category:"動詞"},
+  {id:2,kanji:"飲む",reading:"のむ",romaji:"nomu",meaning:"喝",category:"動詞"},
+  {id:3,kanji:"行く",reading:"いく",romaji:"iku",meaning:"去",category:"動詞"},
+  {id:4,kanji:"来る",reading:"くる",romaji:"kuru",meaning:"來",category:"動詞"},
+  {id:5,kanji:"帰る",reading:"かえる",romaji:"kaeru",meaning:"回去",category:"動詞"},
+  {id:6,kanji:"見る",reading:"みる",romaji:"miru",meaning:"看",category:"動詞"},
+  {id:7,kanji:"聞く",reading:"きく",romaji:"kiku",meaning:"聽;問",category:"動詞"},
+  {id:8,kanji:"話す",reading:"はなす",romaji:"hanasu",meaning:"說話",category:"動詞"},
+  {id:9,kanji:"読む",reading:"よむ",romaji:"yomu",meaning:"讀",category:"動詞"},
+  {id:10,kanji:"書く",reading:"かく",romaji:"kaku",meaning:"寫",category:"動詞"},
+  {id:11,kanji:"買う",reading:"かう",romaji:"kau",meaning:"買",category:"動詞"},
+  {id:12,kanji:"売る",reading:"うる",romaji:"uru",meaning:"賣",category:"動詞"},
+  {id:13,kanji:"起きる",reading:"おきる",romaji:"okiru",meaning:"起床",category:"動詞"},
+  {id:14,kanji:"寝る",reading:"ねる",romaji:"neru",meaning:"睡覺",category:"動詞"},
+  {id:15,kanji:"する",reading:"する",romaji:"suru",meaning:"做",category:"動詞"},
+  {id:16,kanji:"ある",reading:"ある",romaji:"aru",meaning:"有(物品)",category:"動詞"},
+  {id:17,kanji:"いる",reading:"いる",romaji:"iru",meaning:"有;在(人/動物)",category:"動詞"},
+  {id:18,kanji:"分かる",reading:"わかる",romaji:"wakaru",meaning:"知道;了解",category:"動詞"},
+  {id:19,kanji:"知る",reading:"しる",romaji:"shiru",meaning:"知道",category:"動詞"},
+  {id:20,kanji:"作る",reading:"つくる",romaji:"tsukuru",meaning:"製作",category:"動詞"},
+  {id:21,kanji:"使う",reading:"つかう",romaji:"tsukau",meaning:"使用",category:"動詞"},
+  {id:22,kanji:"持つ",reading:"もつ",romaji:"motsu",meaning:"拿著;持有",category:"動詞"},
+  {id:23,kanji:"立つ",reading:"たつ",romaji:"tatsu",meaning:"站立",category:"動詞"},
+  {id:24,kanji:"座る",reading:"すわる",romaji:"suwaru",meaning:"坐",category:"動詞"},
+  {id:25,kanji:"入る",reading:"はいる",romaji:"hairu",meaning:"進入",category:"動詞"},
+  {id:26,kanji:"出る",reading:"でる",romaji:"deru",meaning:"出去",category:"動詞"},
+  {id:27,kanji:"開ける",reading:"あける",romaji:"akeru",meaning:"打開",category:"動詞"},
+  {id:28,kanji:"閉める",reading:"しめる",romaji:"shimeru",meaning:"關閉",category:"動詞"},
+  {id:29,kanji:"教える",reading:"おしえる",romaji:"oshieru",meaning:"教",category:"動詞"},
+  {id:30,kanji:"習う",reading:"ならう",romaji:"narau",meaning:"學習",category:"動詞"},
+  {id:31,kanji:"休む",reading:"やすむ",romaji:"yasumu",meaning:"休息",category:"動詞"},
+  {id:32,kanji:"働く",reading:"はたらく",romaji:"hataraku",meaning:"工作",category:"動詞"},
+  {id:33,kanji:"歌う",reading:"うたう",romaji:"utau",meaning:"唱歌",category:"動詞"},
+  {id:34,kanji:"泳ぐ",reading:"およぐ",romaji:"oyogu",meaning:"游泳",category:"動詞"},
+  {id:35,kanji:"歩く",reading:"あるく",romaji:"aruku",meaning:"走路",category:"動詞"},
+  {id:36,kanji:"走る",reading:"はしる",romaji:"hashiru",meaning:"跑步",category:"動詞"},
+  {id:37,kanji:"待つ",reading:"まつ",romaji:"matsu",meaning:"等待",category:"動詞"},
+  {id:38,kanji:"貸す",reading:"かす",romaji:"kasu",meaning:"借出",category:"動詞"},
+  {id:39,kanji:"借りる",reading:"かりる",romaji:"kariru",meaning:"借入",category:"動詞"},
+  {id:40,kanji:"返す",reading:"かえす",romaji:"kaesu",meaning:"歸還",category:"動詞"},
+  {id:41,kanji:"洗う",reading:"あらう",romaji:"arau",meaning:"洗",category:"動詞"},
+  {id:42,kanji:"切る",reading:"きる",romaji:"kiru",meaning:"切",category:"動詞"},
+  {id:43,kanji:"始まる",reading:"はじまる",romaji:"hajimaru",meaning:"開始",category:"動詞"},
+  {id:44,kanji:"終わる",reading:"おわる",romaji:"owaru",meaning:"結束",category:"動詞"},
+  {id:45,kanji:"大きい",reading:"おおきい",romaji:"ookii",meaning:"大的",category:"形容詞"},
+  {id:46,kanji:"小さい",reading:"ちいさい",romaji:"chiisai",meaning:"小的",category:"形容詞"},
+  {id:47,kanji:"高い",reading:"たかい",romaji:"takai",meaning:"高的;貴的",category:"形容詞"},
+  {id:48,kanji:"安い",reading:"やすい",romaji:"yasui",meaning:"便宜的",category:"形容詞"},
+  {id:49,kanji:"新しい",reading:"あたらしい",romaji:"atarashii",meaning:"新的",category:"形容詞"},
+  {id:50,kanji:"古い",reading:"ふるい",romaji:"furui",meaning:"舊的",category:"形容詞"},
+  {id:51,kanji:"忙しい",reading:"いそがしい",romaji:"isogashii",meaning:"忙碌的",category:"形容詞"},
+  {id:52,kanji:"楽しい",reading:"たのしい",romaji:"tanoshii",meaning:"開心的",category:"形容詞"},
+  {id:53,kanji:"難しい",reading:"むずかしい",romaji:"muzukashii",meaning:"困難的",category:"形容詞"},
+  {id:54,kanji:"簡単",reading:"かんたん",romaji:"kantan",meaning:"簡單",category:"形容詞"},
+  {id:55,kanji:"暑い",reading:"あつい",romaji:"atsui",meaning:"熱的(天氣)",category:"形容詞"},
+  {id:56,kanji:"寒い",reading:"さむい",romaji:"samui",meaning:"冷的(天氣)",category:"形容詞"},
+  {id:57,kanji:"暖かい",reading:"あたたかい",romaji:"atatakai",meaning:"溫暖的",category:"形容詞"},
+  {id:58,kanji:"涼しい",reading:"すずしい",romaji:"suzushii",meaning:"涼爽的",category:"形容詞"},
+  {id:59,kanji:"美味しい",reading:"おいしい",romaji:"oishii",meaning:"好吃的",category:"形容詞"},
+  {id:60,kanji:"元気",reading:"げんき",romaji:"genki",meaning:"有精神;健康",category:"形容詞"},
+  {id:61,kanji:"親切",reading:"しんせつ",romaji:"shinsetsu",meaning:"親切",category:"形容詞"},
+  {id:62,kanji:"有名",reading:"ゆうめい",romaji:"yuumei",meaning:"有名",category:"形容詞"},
+  {id:63,kanji:"便利",reading:"べんり",romaji:"benri",meaning:"方便",category:"形容詞"},
+  {id:64,kanji:"静か",reading:"しずか",romaji:"shizuka",meaning:"安靜",category:"形容詞"},
+  {id:65,kanji:"賑やか",reading:"にぎやか",romaji:"nigiyaka",meaning:"熱鬧",category:"形容詞"},
+  {id:66,kanji:"好き",reading:"すき",romaji:"suki",meaning:"喜歡",category:"形容詞"},
+  {id:67,kanji:"嫌い",reading:"きらい",romaji:"kirai",meaning:"討厭",category:"形容詞"},
+  {id:68,kanji:"上手",reading:"じょうず",romaji:"jouzu",meaning:"擅長",category:"形容詞"},
+  {id:69,kanji:"下手",reading:"へた",romaji:"heta",meaning:"不擅長",category:"形容詞"},
+  {id:70,kanji:"今日",reading:"きょう",romaji:"kyou",meaning:"今天",category:"時間"},
+  {id:71,kanji:"明日",reading:"あした",romaji:"ashita",meaning:"明天",category:"時間"},
+  {id:72,kanji:"昨日",reading:"きのう",romaji:"kinou",meaning:"昨天",category:"時間"},
+  {id:73,kanji:"今",reading:"いま",romaji:"ima",meaning:"現在",category:"時間"},
+  {id:74,kanji:"朝",reading:"あさ",romaji:"asa",meaning:"早上",category:"時間"},
+  {id:75,kanji:"昼",reading:"ひる",romaji:"hiru",meaning:"中午",category:"時間"},
+  {id:76,kanji:"夜",reading:"よる",romaji:"yoru",meaning:"晚上",category:"時間"},
+  {id:77,kanji:"今週",reading:"こんしゅう",romaji:"konshuu",meaning:"這週",category:"時間"},
+  {id:78,kanji:"来週",reading:"らいしゅう",romaji:"raishuu",meaning:"下週",category:"時間"},
+  {id:79,kanji:"先週",reading:"せんしゅう",romaji:"senshuu",meaning:"上週",category:"時間"},
+  {id:80,kanji:"今月",reading:"こんげつ",romaji:"kongetsu",meaning:"這個月",category:"時間"},
+  {id:81,kanji:"毎日",reading:"まいにち",romaji:"mainichi",meaning:"每天",category:"時間"},
+  {id:82,kanji:"時間",reading:"じかん",romaji:"jikan",meaning:"時間",category:"時間"},
+  {id:83,kanji:"分",reading:"ふん",romaji:"fun",meaning:"分鐘",category:"時間"},
+  {id:84,kanji:"学校",reading:"がっこう",romaji:"gakkou",meaning:"學校",category:"人物地點"},
+  {id:85,kanji:"先生",reading:"せんせい",romaji:"sensei",meaning:"老師",category:"人物地點"},
+  {id:86,kanji:"学生",reading:"がくせい",romaji:"gakusei",meaning:"學生",category:"人物地點"},
+  {id:87,kanji:"友達",reading:"ともだち",romaji:"tomodachi",meaning:"朋友",category:"人物地點"},
+  {id:88,kanji:"家族",reading:"かぞく",romaji:"kazoku",meaning:"家人",category:"人物地點"},
+  {id:89,kanji:"会社",reading:"かいしゃ",romaji:"kaisha",meaning:"公司",category:"人物地點"},
+  {id:90,kanji:"病院",reading:"びょういん",romaji:"byouin",meaning:"醫院",category:"人物地點"},
+  {id:91,kanji:"駅",reading:"えき",romaji:"eki",meaning:"車站",category:"人物地點"},
+  {id:92,kanji:"銀行",reading:"ぎんこう",romaji:"ginkou",meaning:"銀行",category:"人物地點"},
+  {id:93,kanji:"図書館",reading:"としょかん",romaji:"toshokan",meaning:"圖書館",category:"人物地點"},
+  {id:94,kanji:"公園",reading:"こうえん",romaji:"kouen",meaning:"公園",category:"人物地點"},
+  {id:95,kanji:"部屋",reading:"へや",romaji:"heya",meaning:"房間",category:"人物地點"},
+  {id:96,kanji:"本",reading:"ほん",romaji:"hon",meaning:"書",category:"物品"},
+  {id:97,kanji:"新聞",reading:"しんぶん",romaji:"shinbun",meaning:"報紙",category:"物品"},
+  {id:98,kanji:"鉛筆",reading:"えんぴつ",romaji:"enpitsu",meaning:"鉛筆",category:"物品"},
+  {id:99,kanji:"机",reading:"つくえ",romaji:"tsukue",meaning:"桌子",category:"物品"},
+  {id:100,kanji:"椅子",reading:"いす",romaji:"isu",meaning:"椅子",category:"物品"},
+  {id:101,kanji:"靴",reading:"くつ",romaji:"kutsu",meaning:"鞋子",category:"物品"},
+  {id:102,kanji:"傘",reading:"かさ",romaji:"kasa",meaning:"雨傘",category:"物品"},
+  {id:103,kanji:"時計",reading:"とけい",romaji:"tokei",meaning:"時鐘;手錶",category:"物品"},
+  {id:104,kanji:"電話",reading:"でんわ",romaji:"denwa",meaning:"電話",category:"物品"},
+  {id:105,kanji:"車",reading:"くるま",romaji:"kuruma",meaning:"車子",category:"物品"},
+  {id:106,kanji:"自転車",reading:"じてんしゃ",romaji:"jitensha",meaning:"腳踏車",category:"物品"},
+  {id:107,kanji:"電車",reading:"でんしゃ",romaji:"densha",meaning:"電車",category:"物品"},
+  {id:108,kanji:"お金",reading:"おかね",romaji:"okane",meaning:"錢",category:"物品"},
+  {id:109,kanji:"とても",reading:"とても",romaji:"totemo",meaning:"非常",category:"副詞"},
+  {id:110,kanji:"少し",reading:"すこし",romaji:"sukoshi",meaning:"一點點",category:"副詞"},
+  {id:111,kanji:"たくさん",reading:"たくさん",romaji:"takusan",meaning:"很多",category:"副詞"},
+  {id:112,kanji:"よく",reading:"よく",romaji:"yoku",meaning:"經常;好好地",category:"副詞"},
+  {id:113,kanji:"まだ",reading:"まだ",romaji:"mada",meaning:"還(沒)",category:"副詞"},
+  {id:114,kanji:"もう",reading:"もう",romaji:"mou",meaning:"已經",category:"副詞"},
+  {id:115,kanji:"すぐ",reading:"すぐ",romaji:"sugu",meaning:"馬上",category:"副詞"},
+  {id:116,kanji:"ちょっと",reading:"ちょっと",romaji:"chotto",meaning:"一下下;有點",category:"副詞"},
+  {id:117,kanji:"いつも",reading:"いつも",romaji:"itsumo",meaning:"總是",category:"副詞"},
+  {id:118,kanji:"時々",reading:"ときどき",romaji:"tokidoki",meaning:"有時候",category:"副詞"}
+];
+
+const STORAGE_KEY = "n5-vocab-progress";
+let progress = {}; // {id: 'known' | 'review'}
+let filteredList = [];
+let currentIdx = 0;
+let isFlipped = false;
+let shuffleMode = false;
+let saveTimer = null;
+
+const cardArea = document.getElementById("cardArea");
+const categoryFilter = document.getElementById("categoryFilter");
+const statusFilter = document.getElementById("statusFilter");
+const saveIndicator = document.getElementById("saveIndicator");
+
+function buildCategoryOptions() {
+  const cats = ["全部", ...new Set(VOCAB.map(v => v.category))];
+  categoryFilter.innerHTML = cats.map(c => `<option value="${c}">${c === "全部" ? "全部分類" : c}</option>`).join("");
+}
+
+function loadProgress() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      progress = JSON.parse(raw);
+    }
+  } catch (e) {
+    progress = {};
+  }
+}
+
+function saveProgress() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+      saveIndicator.classList.add("show");
+      setTimeout(() => saveIndicator.classList.remove("show"), 900);
+    } catch (e) {
+      console.error("儲存失敗", e);
+    }
+  }, 250);
+}
+
+function applyFilters() {
+  const cat = categoryFilter.value;
+  const stat = statusFilter.value;
+  filteredList = VOCAB.filter(v => {
+    if (cat !== "全部" && v.category !== cat) return false;
+    const s = progress[v.id] || "new";
+    if (stat !== "all" && s !== stat) return false;
+    return true;
+  });
+  if (shuffleMode) {
+    filteredList = [...filteredList].sort(() => Math.random() - 0.5);
+  }
+  currentIdx = 0;
+  isFlipped = false;
+  renderCard();
+}
+
+function updateStats() {
+  const total = VOCAB.length;
+  let known = 0, review = 0;
+  VOCAB.forEach(v => {
+    if (progress[v.id] === "known") known++;
+    else if (progress[v.id] === "review") review++;
+  });
+  document.getElementById("statKnown").textContent = known;
+  document.getElementById("statReview").textContent = review;
+  document.getElementById("statTotal").textContent = total;
+  document.getElementById("progKnown").style.width = (known / total * 100) + "%";
+  document.getElementById("progReview").style.width = (review / total * 100) + "%";
+}
+
+function statusColor(status) {
+  if (status === "known") return "#8FA876";
+  if (status === "review") return "#C17A4D";
+  return "#636366";
+}
+
+function renderCard() {
+  updateStats();
+  if (filteredList.length === 0) {
+    cardArea.innerHTML = `<div class="empty-state">這個篩選條件下沒有單字<br>試試切換分類或狀態</div>`;
+    return;
+  }
+  const word = filteredList[currentIdx];
+  const status = progress[word.id] || "new";
+  cardArea.innerHTML = `
+    <div class="card-counter">${currentIdx + 1} / ${filteredList.length}</div>
+    <div class="card-scene">
+      <div class="card ${isFlipped ? "flipped" : ""}" id="flipCard">
+        <div class="face face-front">
+          <span class="tag">${word.category}</span>
+          <span class="status-dot" style="background:${statusColor(status)}"></span>
+          <div class="word-main">${word.kanji}</div>
+          <div class="tap-hint">點擊翻面看意思</div>
+        </div>
+        <div class="face face-back">
+          <span class="tag">${word.category}</span>
+          ${word.reading !== word.kanji ? `<div class="reading">${word.reading}</div>` : ""}
+          <div class="romaji">${word.romaji}</div>
+          <div class="meaning">${word.meaning}</div>
+        </div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn-review" id="reviewBtn">需加強</button>
+      <button class="btn-known" id="knownBtn">已熟悉</button>
+    </div>
+  `;
+
+  document.getElementById("flipCard").addEventListener("click", () => {
+    isFlipped = !isFlipped;
+    document.getElementById("flipCard").classList.toggle("flipped", isFlipped);
+  });
+  document.getElementById("reviewBtn").addEventListener("click", () => markStatus(word.id, "review"));
+  document.getElementById("knownBtn").addEventListener("click", () => markStatus(word.id, "known"));
+}
+
+function markStatus(id, status) {
+  progress[id] = status;
+  saveProgress();
+  updateStats();
+  goNext();
+}
+
+function goNext() {
+  if (filteredList.length === 0) return;
+  isFlipped = false;
+  currentIdx = (currentIdx + 1) % filteredList.length;
+  renderCard();
+}
+
+function goPrev() {
+  if (filteredList.length === 0) return;
+  isFlipped = false;
+  currentIdx = (currentIdx - 1 + filteredList.length) % filteredList.length;
+  renderCard();
+}
+
+document.getElementById("nextBtn").addEventListener("click", goNext);
+document.getElementById("prevBtn").addEventListener("click", goPrev);
+document.getElementById("shuffleBtn").addEventListener("click", (e) => {
+  shuffleMode = !shuffleMode;
+  e.target.classList.toggle("active", shuffleMode);
+  applyFilters();
+});
+categoryFilter.addEventListener("change", applyFilters);
+statusFilter.addEventListener("change", applyFilters);
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if (confirm("確定要清除所有學習進度嗎?這個動作無法復原。")) {
+    progress = {};
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+    } catch (e) {}
+    updateStats();
+    applyFilters();
+  }
+});
+
+(function init() {
+  buildCategoryOptions();
+  loadProgress();
+  applyFilters();
+})();
+</script>
+</body>
+</html>
