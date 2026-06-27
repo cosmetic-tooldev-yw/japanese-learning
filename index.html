@@ -6,15 +6,28 @@
 <title>N5 日文單字卡</title>
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
-  html, body {
-    margin: 0; padding: 0; height: 100%;
+  html {
+    background: #1c1c1e;
+  }
+  body {
+    margin: 0; padding: 0; min-height: 100%;
     font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "PingFang TC", "Segoe UI", sans-serif;
-    background: linear-gradient(160deg, #1c1c1e 0%, #2c2c2e 100%);
+    background: #1c1c1e;
     color: #fff;
     overscroll-behavior: none;
     touch-action: manipulation;
   }
-  #app { max-width: 460px; margin: 0 auto; min-height: 100vh; padding: 16px 16px 28px; display: flex; flex-direction: column; }
+  #app {
+    max-width: 460px;
+    margin: 0 auto;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    padding: 16px 16px calc(28px + env(safe-area-inset-bottom));
+    padding-top: calc(16px + env(safe-area-inset-top));
+    display: flex;
+    flex-direction: column;
+    background: #1c1c1e;
+  }
   header { text-align: center; padding: 8px 0 4px; }
   h1 { font-size: 20px; margin: 0; font-weight: 600; letter-spacing: 0.5px; }
   .subtitle { font-size: 12px; color: #9a9a9e; margin-top: 4px; }
