@@ -309,6 +309,7 @@ function buildVocab() {
   return list;
 }
 const VOCAB = buildVocab();
+const SOUND_ICON = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>';
 
 const STORAGE_KEY = "gojuon-progress-v1";
 let progress = {};
@@ -418,13 +419,13 @@ function renderCard() {
           <span class="status-dot" style="background:${statusColor(s)}"></span>
           <div class="kana-main">${w.kana}</div>
           <div class="tap-hint">點擊翻面看讀音</div>
-          <button class="sound-btn-front" id="soundBtnFront">🔊</button>
+          <button class="sound-btn-front" id="soundBtnFront">${SOUND_ICON}</button>
         </div>
         <div class="face face-back">
           <span class="tag">${SCRIPT_LABEL[w.script]}・${GROUP_LABEL[w.group]}</span>
           <div class="romaji-back">${w.romaji}</div>
           <div class="type-label">${w.kana}</div>
-          <button class="sound-btn" id="soundBtnBack">🔊</button>
+          <button class="sound-btn" id="soundBtnBack">${SOUND_ICON}</button>
         </div>
       </div>
     </div>
