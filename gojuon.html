@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>五十音練習</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+  html { background: #1c1c1e; }
+  body {
+    margin: 0; padding: 0; min-height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "PingFang TC", "Segoe UI", sans-serif;
+    background: #1c1c1e;
+    color: #fff;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+  }
+  #app {
+    max-width: 460px;
+    margin: 0 auto;
+    min-height: 100vh;
+    padding: 16px 16px calc(28px + env(safe-area-inset-bottom));
+    padding-top: calc(16px + env(safe-area-inset-top));
+    display: flex;
+    flex-direction: column;
+    background: #1c1c1e;
+  }
+  header { text-align: center; padding: 8px 0 4px; }
+  h1 { font-size: 20px; margin: 0; font-weight: 600; letter-spacing: 0.5px; }
+  .subtitle { font-size: 12px; color: #9a9a9e; margin-top: 4px; }
+
+  .mode-tabs {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 14px;
+    padding: 4px;
+  }
+  .mode-tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px 4px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #9a9a9e;
+    background: transparent;
+    border: none;
+  }
+  .mode-tab.active { background: #fff; color: #1c1c1e; }
+
+  .stats-bar {
+    margin-top: 14px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 16px;
+    padding: 12px 14px;
+  }
+  .stats-row { display: flex; justify-content: space-between; font-size: 12px; color: #c7c7cc; margin-bottom: 8px; }
+  .stats-row b { color: #fff; font-size: 13px; }
+  .progress-track { height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; display: flex; }
+  .progress-known { background: #8FA876; height: 100%; transition: width 0.3s; }
+  .progress-review { background: #C17A4D; height: 100%; transition: width 0.3s; }
+
+  .filters { display: flex; gap: 8px; margin-top: 14px; }
+  select {
+    flex: 1; background: rgba(255,255,255,0.08); color: #fff; border: none;
+    border-radius: 12px; padding: 10px 8px; font-size: 13px; text-align: center;
+    appearance: none; -webkit-appearance: none;
+  }
+  select option { color: #000; background: #fff; }
+
+  .card-area {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    margin-top: 18px; min-height: 260px;
+  }
+  .card-counter { font-size: 12px; color: #8e8e93; margin-bottom: 10px; }
+  .card-scene { width: 100%; max-width: 340px; height: 230px; perspective: 1200px; }
+  .card {
+    width: 100%; height: 100%; position: relative; transform-style: preserve-3d;
+    transition: transform 0.45s cubic-bezier(.4,.2,.2,1); cursor: pointer;
+  }
+  .card.flipped { transform: rotateY(180deg); }
+  .face {
+    position: absolute; inset: 0; backface-visibility: hidden; border-radius: 24px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 20px; box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+  }
+  .face-front { background: linear-gradient(145deg, #3a3a3c, #232325); border: 1px solid rgba(255,255,255,0.08); }
+  .face-back {
+    background: linear-gradient(145deg, #f6efe0, #efe4cf); color: #2b2b2d; transform: rotateY(180deg);
+  }
+  .face-back .tag { background: rgba(43,43,45,0.08); color: #2b2b2d; }
+  .tag {
+    position: absolute; top: 14px; left: 14px; font-size: 11px; background: rgba(255,255,255,0.12);
+    padding: 4px 10px; border-radius: 100px; color: #d0d0d5;
+  }
+  .status-dot { position: absolute; top: 14px; right: 14px; width: 10px; height: 10px; border-radius: 50%; }
+  .kana-main { font-size: 64px; font-weight: 600; text-align: center; line-height: 1.2; }
+  .tap-hint { font-size: 11px; color: #8e8e93; margin-top: 10px; }
+  .romaji-back { font-size: 34px; font-weight: 700; color: #2b2b2d; }
+  .type-label { font-size: 12px; opacity: 0.6; margin-top: 8px; color: #2b2b2d; }
+
+  .sound-btn {
+    position: absolute; bottom: 14px; right: 14px;
+    width: 34px; height: 34px; border-radius: 50%;
+    background: rgba(43,43,45,0.08); border: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; color: #2b2b2d;
+  }
+  .sound-btn:active { background: rgba(43,43,45,0.18); }
+  .sound-btn-front {
+    position: absolute; bottom: 14px; right: 14px;
+    width: 34px; height: 34px; border-radius: 50%;
+    background: rgba(255,255,255,0.1); border: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; color: #fff;
+  }
+  .sound-btn-front:active { background: rgba(255,255,255,0.2); }
+
+  .actions { display: flex; gap: 10px; margin-top: 20px; width: 100%; max-width: 340px; }
+  .actions button { flex: 1; border: none; border-radius: 16px; padding: 14px 8px; font-size: 14px; font-weight: 600; }
+  .btn-review { background: #C17A4D; color: #fff; }
+  .btn-known { background: #8FA876; color: #fff; }
+
+  .nav-row { display: flex; align-items: center; justify-content: center; gap: 18px; margin-top: 18px; }
+  .nav-btn {
+    background: rgba(255,255,255,0.08); border: none; color: #fff; width: 44px; height: 44px;
+    border-radius: 50%; font-size: 18px; display: flex; align-items: center; justify-content: center;
+  }
+  .nav-btn:active { background: rgba(255,255,255,0.18); }
+  .shuffle-btn { background: rgba(255,255,255,0.08); border: none; color: #fff; border-radius: 100px; padding: 10px 16px; font-size: 13px; }
+  .shuffle-btn.active { background: #fff; color: #1c1c1e; }
+
+  .footer-row { display: flex; justify-content: center; margin-top: 18px; }
+  .reset-link { font-size: 12px; color: #636366; background: none; border: none; padding: 6px; }
+
+  .empty-state { text-align: center; color: #8e8e93; font-size: 14px; padding: 40px 20px; }
+  .save-indicator {
+    position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%);
+    font-size: 11px; color: #636366; opacity: 0; transition: opacity 0.3s;
+  }
+  .save-indicator.show { opacity: 1; }
+
+  .grid-view { margin-top: 18px; }
+  .grid-group { margin-bottom: 18px; }
+  .grid-group-title { font-size: 12px; color: #8e8e93; margin-bottom: 8px; padding-left: 2px; }
+  .grid-cells { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .grid-cell {
+    aspect-ratio: 1; background: rgba(255,255,255,0.06); border-radius: 14px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    border: none; color: #fff; position: relative; padding: 4px;
+  }
+  .grid-cell:active { background: rgba(255,255,255,0.12); }
+  .grid-cell .k { font-size: 22px; font-weight: 600; }
+  .grid-cell .r { font-size: 10px; color: #9a9a9e; margin-top: 2px; }
+  .grid-cell.empty { background: transparent; }
+  .grid-cell .dot { position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; border-radius: 50%; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>五十音練習</h1>
+    <div class="subtitle">ひらがな・カタカナ ・ 進度自動儲存</div>
+  </header>
+
+  <div class="mode-tabs">
+    <button class="mode-tab active" data-mode="flash">閃卡練習</button>
+    <button class="mode-tab" data-mode="grid">總覽表</button>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stats-row">
+      <span>整體進度</span>
+      <span><b id="statKnown">0</b> 已熟悉 ・ <b id="statReview">0</b> 需加強 ・ <b id="statTotal">0</b> 總數</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-known" id="progKnown" style="width:0%"></div>
+      <div class="progress-review" id="progReview" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div class="filters">
+    <select id="scriptFilter">
+      <option value="all">平假名+片假名</option>
+      <option value="hiragana">平假名</option>
+      <option value="katakana">片假名</option>
+    </select>
+    <select id="groupFilter">
+      <option value="all">全部類型</option>
+      <option value="seion">清音</option>
+      <option value="dakuten">濁音/半濁音</option>
+      <option value="youon">拗音</option>
+    </select>
+  </div>
+
+  <div id="flashView">
+    <div class="filters" style="margin-top:8px;">
+      <select id="statusFilter">
+        <option value="all">全部狀態</option>
+        <option value="new">未學習</option>
+        <option value="review">需加強</option>
+        <option value="known">已熟悉</option>
+      </select>
+    </div>
+
+    <div class="card-area" id="cardArea"></div>
+
+    <div class="nav-row">
+      <button class="nav-btn" id="prevBtn">‹</button>
+      <button class="shuffle-btn" id="shuffleBtn">隨機</button>
+      <button class="nav-btn" id="nextBtn">›</button>
+    </div>
+
+    <div class="footer-row">
+      <button class="reset-link" id="resetBtn">清除全部進度</button>
+    </div>
+  </div>
+
+  <div id="gridView" class="grid-view" style="display:none;"></div>
+</div>
+<div class="save-indicator" id="saveIndicator">已儲存</div>
+
+<script>
+// row = 段 (a,i,u,e,o order index), col group label for display
+const HIRAGANA_SEION = [
+  ["あ","a"],["い","i"],["う","u"],["え","e"],["お","o"],
+  ["か","ka"],["き","ki"],["く","ku"],["け","ke"],["こ","ko"],
+  ["さ","sa"],["し","shi"],["す","su"],["せ","se"],["そ","so"],
+  ["た","ta"],["ち","chi"],["つ","tsu"],["て","te"],["と","to"],
+  ["な","na"],["に","ni"],["ぬ","nu"],["ね","ne"],["の","no"],
+  ["は","ha"],["ひ","hi"],["ふ","fu"],["へ","he"],["ほ","ho"],
+  ["ま","ma"],["み","mi"],["む","mu"],["め","me"],["も","mo"],
+  ["や","ya"],null,["ゆ","yu"],null,["よ","yo"],
+  ["ら","ra"],["り","ri"],["る","ru"],["れ","re"],["ろ","ro"],
+  ["わ","wa"],null,null,null,["を","wo"],
+  ["ん","n"]
+];
+const HIRAGANA_DAKUTEN = [
+  ["が","ga"],["ぎ","gi"],["ぐ","gu"],["げ","ge"],["ご","go"],
+  ["ざ","za"],["じ","ji"],["ず","zu"],["ぜ","ze"],["ぞ","zo"],
+  ["だ","da"],["ぢ","ji"],["づ","zu"],["で","de"],["ど","do"],
+  ["ば","ba"],["び","bi"],["ぶ","bu"],["べ","be"],["ぼ","bo"],
+  ["ぱ","pa"],["ぴ","pi"],["ぷ","pu"],["ぺ","pe"],["ぽ","po"]
+];
+const HIRAGANA_YOON = [
+  ["きゃ","kya"],["きゅ","kyu"],["きょ","kyo"],
+  ["しゃ","sha"],["しゅ","shu"],["しょ","sho"],
+  ["ちゃ","cha"],["ちゅ","chu"],["ちょ","cho"],
+  ["にゃ","nya"],["にゅ","nyu"],["にょ","nyo"],
+  ["ひゃ","hya"],["ひゅ","hyu"],["ひょ","hyo"],
+  ["みゃ","mya"],["みゅ","myu"],["みょ","myo"],
+  ["りゃ","rya"],["りゅ","ryu"],["りょ","ryo"],
+  ["ぎゃ","gya"],["ぎゅ","gyu"],["ぎょ","gyo"],
+  ["じゃ","ja"],["じゅ","ju"],["じょ","jo"],
+  ["びゃ","bya"],["びゅ","byu"],["びょ","byo"],
+  ["ぴゃ","pya"],["ぴゅ","pyu"],["ぴょ","pyo"]
+];
+const KATAKANA_SEION = [
+  ["ア","a"],["イ","i"],["ウ","u"],["エ","e"],["オ","o"],
+  ["カ","ka"],["キ","ki"],["ク","ku"],["ケ","ke"],["コ","ko"],
+  ["サ","sa"],["シ","shi"],["ス","su"],["セ","se"],["ソ","so"],
+  ["タ","ta"],["チ","chi"],["ツ","tsu"],["テ","te"],["ト","to"],
+  ["ナ","na"],["ニ","ni"],["ヌ","nu"],["ネ","ne"],["ノ","no"],
+  ["ハ","ha"],["ヒ","hi"],["フ","fu"],["ヘ","he"],["ホ","ho"],
+  ["マ","ma"],["ミ","mi"],["ム","mu"],["メ","me"],["モ","mo"],
+  ["ヤ","ya"],null,["ユ","yu"],null,["ヨ","yo"],
+  ["ラ","ra"],["リ","ri"],["ル","ru"],["レ","re"],["ロ","ro"],
+  ["ワ","wa"],null,null,null,["ヲ","wo"],
+  ["ン","n"]
+];
+const KATAKANA_DAKUTEN = [
+  ["ガ","ga"],["ギ","gi"],["グ","gu"],["ゲ","ge"],["ゴ","go"],
+  ["ザ","za"],["ジ","ji"],["ズ","zu"],["ゼ","ze"],["ゾ","zo"],
+  ["ダ","da"],["ヂ","ji"],["ヅ","zu"],["デ","de"],["ド","do"],
+  ["バ","ba"],["ビ","bi"],["ブ","bu"],["ベ","be"],["ボ","bo"],
+  ["パ","pa"],["ピ","pi"],["プ","pu"],["ペ","pe"],["ポ","po"]
+];
+const KATAKANA_YOON = [
+  ["キャ","kya"],["キュ","kyu"],["キョ","kyo"],
+  ["シャ","sha"],["シュ","shu"],["ショ","sho"],
+  ["チャ","cha"],["チュ","chu"],["チョ","cho"],
+  ["ニャ","nya"],["ニュ","nyu"],["ニョ","nyo"],
+  ["ヒャ","hya"],["ヒュ","hyu"],["ヒョ","hyo"],
+  ["ミャ","mya"],["ミュ","myu"],["ミョ","myo"],
+  ["リャ","rya"],["リュ","ryu"],["リョ","ryo"],
+  ["ギャ","gya"],["ギュ","gyu"],["ギョ","gyo"],
+  ["ジャ","ja"],["ジュ","ju"],["ジョ","jo"],
+  ["ビャ","bya"],["ビュ","byu"],["ビョ","byo"],
+  ["ピャ","pya"],["ピュ","pyu"],["ピョ","pyo"]
+];
+
+function buildVocab() {
+  const list = [];
+  let id = 1;
+  function push(arr, script, group) {
+    arr.forEach(item => {
+      if (!item) return;
+      list.push({ id: id++, kana: item[0], romaji: item[1], script, group });
+    });
+  }
+  push(HIRAGANA_SEION, "hiragana", "seion");
+  push(HIRAGANA_DAKUTEN, "hiragana", "dakuten");
+  push(HIRAGANA_YOON, "hiragana", "youon");
+  push(KATAKANA_SEION, "katakana", "seion");
+  push(KATAKANA_DAKUTEN, "katakana", "dakuten");
+  push(KATAKANA_YOON, "katakana", "youon");
+  return list;
+}
+const VOCAB = buildVocab();
+
+const STORAGE_KEY = "gojuon-progress-v1";
+let progress = {};
+let filteredList = [];
+let currentIdx = 0;
+let isFlipped = false;
+let shuffleMode = false;
+let saveTimer = null;
+let currentView = "flash";
+
+const cardArea = document.getElementById("cardArea");
+const scriptFilter = document.getElementById("scriptFilter");
+const groupFilter = document.getElementById("groupFilter");
+const statusFilter = document.getElementById("statusFilter");
+const saveIndicator = document.getElementById("saveIndicator");
+const gridView = document.getElementById("gridView");
+const flashView = document.getElementById("flashView");
+
+function loadProgress() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) progress = JSON.parse(raw);
+  } catch(e) { progress = {}; }
+}
+function saveProgress() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+      saveIndicator.classList.add("show");
+      setTimeout(() => saveIndicator.classList.remove("show"), 900);
+    } catch(e) {}
+  }, 250);
+}
+
+function speak(text) {
+  try {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "ja-JP";
+    u.rate = 0.85;
+    window.speechSynthesis.speak(u);
+  } catch(e) {}
+}
+
+function matchesFilters(v) {
+  const script = scriptFilter.value;
+  const group = groupFilter.value;
+  if (script !== "all" && v.script !== script) return false;
+  if (group !== "all" && v.group !== group) return false;
+  return true;
+}
+
+function applyFilters() {
+  const stat = statusFilter.value;
+  filteredList = VOCAB.filter(v => {
+    if (!matchesFilters(v)) return false;
+    const s = progress[v.id] || "new";
+    if (stat !== "all" && s !== stat) return false;
+    return true;
+  });
+  if (shuffleMode) filteredList = [...filteredList].sort(() => Math.random() - 0.5);
+  currentIdx = 0;
+  isFlipped = false;
+  renderCard();
+}
+
+function updateStats() {
+  const relevant = VOCAB.filter(matchesFilters);
+  const total = relevant.length;
+  let known = 0, review = 0;
+  relevant.forEach(v => {
+    if (progress[v.id] === "known") known++;
+    else if (progress[v.id] === "review") review++;
+  });
+  document.getElementById("statKnown").textContent = known;
+  document.getElementById("statReview").textContent = review;
+  document.getElementById("statTotal").textContent = total;
+  document.getElementById("progKnown").style.width = (total ? known/total*100 : 0) + "%";
+  document.getElementById("progReview").style.width = (total ? review/total*100 : 0) + "%";
+}
+
+function statusColor(s) {
+  if (s === "known") return "#8FA876";
+  if (s === "review") return "#C17A4D";
+  return "#636366";
+}
+
+const GROUP_LABEL = { seion: "清音", dakuten: "濁音/半濁音", youon: "拗音" };
+const SCRIPT_LABEL = { hiragana: "平假名", katakana: "片假名" };
+
+function renderCard() {
+  updateStats();
+  if (filteredList.length === 0) {
+    cardArea.innerHTML = `<div class="empty-state">這個篩選條件下沒有假名<br>試試切換分類或狀態</div>`;
+    return;
+  }
+  const w = filteredList[currentIdx];
+  const s = progress[w.id] || "new";
+  cardArea.innerHTML = `
+    <div class="card-counter">${currentIdx+1} / ${filteredList.length}</div>
+    <div class="card-scene">
+      <div class="card ${isFlipped?"flipped":""}" id="flipCard">
+        <div class="face face-front">
+          <span class="tag">${SCRIPT_LABEL[w.script]}・${GROUP_LABEL[w.group]}</span>
+          <span class="status-dot" style="background:${statusColor(s)}"></span>
+          <div class="kana-main">${w.kana}</div>
+          <div class="tap-hint">點擊翻面看讀音</div>
+          <button class="sound-btn-front" id="soundBtnFront">🔊</button>
+        </div>
+        <div class="face face-back">
+          <span class="tag">${SCRIPT_LABEL[w.script]}・${GROUP_LABEL[w.group]}</span>
+          <div class="romaji-back">${w.romaji}</div>
+          <div class="type-label">${w.kana}</div>
+          <button class="sound-btn" id="soundBtnBack">🔊</button>
+        </div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn-review" id="reviewBtn">需加強</button>
+      <button class="btn-known" id="knownBtn">已熟悉</button>
+    </div>`;
+  document.getElementById("flipCard").addEventListener("click", (e) => {
+    if (e.target.closest(".sound-btn") || e.target.closest(".sound-btn-front")) return;
+    isFlipped = !isFlipped;
+    document.getElementById("flipCard").classList.toggle("flipped", isFlipped);
+  });
+  document.getElementById("soundBtnFront").addEventListener("click", (e) => {
+    e.stopPropagation();
+    speak(w.kana);
+  });
+  document.getElementById("soundBtnBack").addEventListener("click", (e) => {
+    e.stopPropagation();
+    speak(w.kana);
+  });
+  document.getElementById("reviewBtn").addEventListener("click", () => markStatus(w.id, "review"));
+  document.getElementById("knownBtn").addEventListener("click", () => markStatus(w.id, "known"));
+}
+
+function markStatus(id, s) {
+  progress[id] = s;
+  saveProgress();
+  updateStats();
+  goNext();
+}
+function goNext() {
+  if (!filteredList.length) return;
+  isFlipped = false;
+  currentIdx = (currentIdx+1) % filteredList.length;
+  renderCard();
+}
+function goPrev() {
+  if (!filteredList.length) return;
+  isFlipped = false;
+  currentIdx = (currentIdx-1+filteredList.length) % filteredList.length;
+  renderCard();
+}
+
+document.getElementById("nextBtn").addEventListener("click", goNext);
+document.getElementById("prevBtn").addEventListener("click", goPrev);
+document.getElementById("shuffleBtn").addEventListener("click", e => {
+  shuffleMode = !shuffleMode;
+  e.target.classList.toggle("active", shuffleMode);
+  applyFilters();
+});
+scriptFilter.addEventListener("change", () => { applyFilters(); if (currentView==="grid") renderGrid(); });
+groupFilter.addEventListener("change", () => { applyFilters(); if (currentView==="grid") renderGrid(); });
+statusFilter.addEventListener("change", applyFilters);
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if (confirm("確定要清除所有學習進度嗎?這個動作無法復原。")) {
+    progress = {};
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(progress)); } catch(e) {}
+    updateStats();
+    applyFilters();
+    if (currentView==="grid") renderGrid();
+  }
+});
+
+document.querySelectorAll(".mode-tab").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".mode-tab").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentView = btn.dataset.mode;
+    if (currentView === "flash") {
+      flashView.style.display = "";
+      gridView.style.display = "none";
+      applyFilters();
+    } else {
+      flashView.style.display = "none";
+      gridView.style.display = "";
+      renderGrid();
+    }
+  });
+});
+
+function renderGrid() {
+  const relevant = VOCAB.filter(matchesFilters);
+  updateStats();
+  const groups = {};
+  relevant.forEach(v => {
+    const key = SCRIPT_LABEL[v.script] + " ・ " + GROUP_LABEL[v.group];
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(v);
+  });
+  if (Object.keys(groups).length === 0) {
+    gridView.innerHTML = `<div class="empty-state">這個篩選條件下沒有假名</div>`;
+    return;
+  }
+  let html = "";
+  Object.keys(groups).forEach(key => {
+    html += `<div class="grid-group"><div class="grid-group-title">${key}</div><div class="grid-cells">`;
+    groups[key].forEach(v => {
+      const s = progress[v.id] || "new";
+      html += `<button class="grid-cell" data-id="${v.id}" data-kana="${v.kana}">
+        <span class="dot" style="background:${statusColor(s)}"></span>
+        <span class="k">${v.kana}</span>
+        <span class="r">${v.romaji}</span>
+      </button>`;
+    });
+    html += `</div></div>`;
+  });
+  gridView.innerHTML = html;
+  gridView.querySelectorAll(".grid-cell").forEach(cell => {
+    cell.addEventListener("click", () => speak(cell.dataset.kana));
+  });
+}
+
+(function init() {
+  loadProgress();
+  applyFilters();
+})();
+</script>
+</body>
+</html>
