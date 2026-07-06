@@ -33,7 +33,18 @@
     flex-direction: column;
     background: #1c1c1e;
   }
-  header { text-align: center; padding: 8px 0 4px; }
+  header { text-align: center; padding: 8px 0 4px; position: relative; }
+  .home-btn {
+    position: absolute;
+    left: 0; top: 6px;
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+    border: none;
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .home-btn:active { background: rgba(255,255,255,0.18); }
   h1 { font-size: 20px; margin: 0; font-weight: 600; letter-spacing: 0.5px; }
   .subtitle { font-size: 12px; color: #9a9a9e; margin-top: 4px; }
 
@@ -169,6 +180,9 @@
 <body>
 <div id="app">
   <header>
+    <a class="home-btn" href="../index.html" aria-label="返回首頁">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-9 9 9"></path><path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"></path></svg>
+    </a>
     <h1>五十音練習</h1>
     <div class="subtitle">ひらがな・カタカナ ・ 進度自動儲存</div>
   </header>
