@@ -70,6 +70,22 @@
   .face-back .tag { background: rgba(43,43,45,0.08); color: #2b2b2d; }
   .tag { position: absolute; top: 14px; left: 14px; font-size: 11px; background: rgba(255,255,255,0.12); padding: 4px 10px; border-radius: 100px; color: #d0d0d5; }
   .status-dot { position: absolute; top: 14px; right: 14px; width: 10px; height: 10px; border-radius: 50%; }
+  .sound-btn {
+    position: absolute; bottom: 14px; right: 14px;
+    width: 34px; height: 34px; border-radius: 50%;
+    background: rgba(43,43,45,0.08); border: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; color: #2b2b2d;
+  }
+  .sound-btn:active { background: rgba(43,43,45,0.18); }
+  .sound-btn-front {
+    position: absolute; bottom: 14px; right: 14px;
+    width: 34px; height: 34px; border-radius: 50%;
+    background: rgba(255,255,255,0.1); border: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; color: #fff;
+  }
+  .sound-btn-front:active { background: rgba(255,255,255,0.2); }
   .word-main { font-size: 36px; font-weight: 600; text-align: center; line-height: 1.3; }
   .tap-hint { font-size: 11px; color: #8e8e93; margin-top: 10px; }
   .reading { font-size: 20px; font-weight: 500; margin-bottom: 4px; opacity: 0.85; color: #2b2b2d; }
@@ -89,6 +105,41 @@
   .empty-state { text-align: center; color: #8e8e93; font-size: 14px; padding: 40px 20px; }
   .save-indicator { position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%); font-size: 11px; color: #636366; opacity: 0; transition: opacity 0.3s; }
   .save-indicator.show { opacity: 1; }
+  .mode-tabs {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 14px;
+    padding: 4px;
+  }
+  .mode-tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px 4px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #9a9a9e;
+    background: transparent;
+    border: none;
+  }
+  .mode-tab.active { background: #fff; color: #1c1c1e; }
+  .grid-view { margin-top: 18px; }
+  .grid-group { margin-bottom: 18px; }
+  .grid-group-title { font-size: 12px; color: #8e8e93; margin-bottom: 8px; padding-left: 2px; }
+  .grid-cells { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .grid-cell {
+    aspect-ratio: 1; background: rgba(255,255,255,0.06); border-radius: 14px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    border: none; color: #fff; position: relative; padding: 4px;
+  }
+  .grid-cell:active { background: rgba(255,255,255,0.12); }
+  .grid-cell .k { font-size: 18px; font-weight: 600; text-align: center; }
+  .grid-cell .r { font-size: 10px; color: #9a9a9e; margin-top: 2px; text-align: center; }
+  .grid-cell .m { font-size: 10px; color: #d0d0d5; margin-top: 2px; text-align: center; }
+  .grid-cell.empty { background: transparent; }
+  .grid-cell .dot { position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; border-radius: 50%; }
 </style>
 </head>
 <body>
@@ -100,6 +151,12 @@
     <h1>N5 單字卡</h1>
     <div class="subtitle">N5 日文單字卡 ・ 進度自動儲存</div>
   </header>
+
+  <div class="mode-tabs">
+    <button class="mode-tab active" data-mode="flash">閃卡練習</button>
+    <button class="mode-tab" data-mode="grid">總覽表</button>
+  </div>
+
   <div class="stats-bar">
     <div class="stats-row">
       <span>整體進度</span>
@@ -110,24 +167,35 @@
       <div class="progress-review" id="progReview" style="width:0%"></div>
     </div>
   </div>
+
   <div class="filters">
     <select id="categoryFilter"></select>
-    <select id="statusFilter">
-      <option value="all">全部狀態</option>
-      <option value="new">未學習</option>
-      <option value="review">需加強</option>
-      <option value="known">已熟悉</option>
-    </select>
   </div>
-  <div class="card-area" id="cardArea"></div>
-  <div class="nav-row">
-    <button class="nav-btn" id="prevBtn">‹</button>
-    <button class="shuffle-btn" id="shuffleBtn">隨機</button>
-    <button class="nav-btn" id="nextBtn">›</button>
+
+  <div id="flashView">
+    <div class="filters" style="margin-top:8px;">
+      <select id="statusFilter">
+        <option value="all">全部狀態</option>
+        <option value="new">未學習</option>
+        <option value="review">需加強</option>
+        <option value="known">已熟悉</option>
+      </select>
+    </div>
+
+    <div class="card-area" id="cardArea"></div>
+
+    <div class="nav-row">
+      <button class="nav-btn" id="prevBtn">‹</button>
+      <button class="shuffle-btn" id="shuffleBtn">隨機</button>
+      <button class="nav-btn" id="nextBtn">›</button>
+    </div>
+
+    <div class="footer-row">
+      <button class="reset-link" id="resetBtn">清除全部進度</button>
+    </div>
   </div>
-  <div class="footer-row">
-    <button class="reset-link" id="resetBtn">清除全部進度</button>
-  </div>
+
+  <div id="gridView" class="grid-view" style="display:none;"></div>
 </div>
 <div class="save-indicator" id="saveIndicator">已儲存</div>
 <script>
@@ -569,11 +637,14 @@ let currentIdx = 0;
 let isFlipped = false;
 let shuffleMode = false;
 let saveTimer = null;
+let currentView = "flash";
 
 const cardArea = document.getElementById("cardArea");
 const categoryFilter = document.getElementById("categoryFilter");
 const statusFilter = document.getElementById("statusFilter");
 const saveIndicator = document.getElementById("saveIndicator");
+const gridView = document.getElementById("gridView");
+const flashView = document.getElementById("flashView");
 
 function buildCategoryOptions() {
   const cats = ["全部", ...new Set(VOCAB.map(v => v.category))];
@@ -596,6 +667,11 @@ function saveProgress() {
       setTimeout(() => saveIndicator.classList.remove("show"), 900);
     } catch(e) {}
   }, 250);
+}
+
+function matchesFilters(v) {
+  const cat = categoryFilter.value;
+  return cat === "全部" || v.category === cat;
 }
 
 function applyFilters() {
@@ -627,6 +703,19 @@ function updateStats() {
   document.getElementById("progReview").style.width = (review/total*100) + "%";
 }
 
+const SOUND_ICON = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>';
+
+function speak(text) {
+  try {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "ja-JP";
+    u.rate = 0.85;
+    window.speechSynthesis.speak(u);
+  } catch(e) {}
+}
+
 function statusColor(s) {
   if (s === "known") return "#8FA876";
   if (s === "review") return "#C17A4D";
@@ -650,12 +739,14 @@ function renderCard() {
           <span class="status-dot" style="background:${statusColor(s)}"></span>
           <div class="word-main">${w.kanji}</div>
           <div class="tap-hint">點擊翻面看意思</div>
+          <button class="sound-btn-front" id="soundBtnFront">${SOUND_ICON}</button>
         </div>
         <div class="face face-back">
           <span class="tag">${w.category}</span>
           ${w.reading !== w.kanji ? `<div class="reading">${w.reading}</div>` : ""}
           <div class="romaji">${w.romaji}</div>
           <div class="meaning">${w.meaning}</div>
+          <button class="sound-btn" id="soundBtnBack">${SOUND_ICON}</button>
         </div>
       </div>
     </div>
@@ -663,9 +754,18 @@ function renderCard() {
       <button class="btn-review" id="reviewBtn">需加強</button>
       <button class="btn-known" id="knownBtn">已熟悉</button>
     </div>`;
-  document.getElementById("flipCard").addEventListener("click", () => {
+  document.getElementById("flipCard").addEventListener("click", (e) => {
+    if (e.target.closest(".sound-btn") || e.target.closest(".sound-btn-front")) return;
     isFlipped = !isFlipped;
     document.getElementById("flipCard").classList.toggle("flipped", isFlipped);
+  });
+  document.getElementById("soundBtnFront").addEventListener("click", (e) => {
+    e.stopPropagation();
+    speak(w.reading || w.kanji);
+  });
+  document.getElementById("soundBtnBack").addEventListener("click", (e) => {
+    e.stopPropagation();
+    speak(w.reading || w.kanji);
   });
   document.getElementById("reviewBtn").addEventListener("click", () => markStatus(w.id, "review"));
   document.getElementById("knownBtn").addEventListener("click", () => markStatus(w.id, "known"));
@@ -699,7 +799,7 @@ document.getElementById("shuffleBtn").addEventListener("click", e => {
   e.target.classList.toggle("active", shuffleMode);
   applyFilters();
 });
-categoryFilter.addEventListener("change", applyFilters);
+categoryFilter.addEventListener("change", () => { applyFilters(); if (currentView==="grid") renderGrid(); });
 statusFilter.addEventListener("change", applyFilters);
 document.getElementById("resetBtn").addEventListener("click", () => {
   if (confirm("確定要清除所有學習進度嗎?這個動作無法復原。")) {
@@ -707,8 +807,57 @@ document.getElementById("resetBtn").addEventListener("click", () => {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(progress)); } catch(e) {}
     updateStats();
     applyFilters();
+    if (currentView==="grid") renderGrid();
   }
 });
+
+document.querySelectorAll(".mode-tab").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".mode-tab").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentView = btn.dataset.mode;
+    if (currentView === "flash") {
+      flashView.style.display = "";
+      gridView.style.display = "none";
+      applyFilters();
+    } else {
+      flashView.style.display = "none";
+      gridView.style.display = "";
+      renderGrid();
+    }
+  });
+});
+
+function renderGrid() {
+  const relevant = VOCAB.filter(matchesFilters);
+  updateStats();
+  const groups = {};
+  relevant.forEach(v => {
+    if (!groups[v.category]) groups[v.category] = [];
+    groups[v.category].push(v);
+  });
+  if (Object.keys(groups).length === 0) {
+    gridView.innerHTML = `<div class="empty-state">這個篩選條件下沒有單字</div>`;
+    return;
+  }
+  let html = "";
+  Object.keys(groups).forEach(key => {
+    html += `<div class="grid-group"><div class="grid-group-title">${key}</div><div class="grid-cells">`;
+    groups[key].forEach(v => {
+      const s = progress[v.id] || "new";
+      html += `<button class="grid-cell" data-id="${v.id}" data-kana="${v.reading || v.kanji}">
+        <span class="dot" style="background:${statusColor(s)}"></span>
+        <span class="k">${v.kanji}</span>
+        <span class="m">${v.meaning}</span>
+      </button>`;
+    });
+    html += `</div></div>`;
+  });
+  gridView.innerHTML = html;
+  gridView.querySelectorAll(".grid-cell").forEach(cell => {
+    cell.addEventListener("click", () => speak(cell.dataset.kana));
+  });
+}
 
 (function init() {
   buildCategoryOptions();
