@@ -62,18 +62,27 @@
   .tool-card.n5::before { background: #8FA876; }
   .tool-card.gojuon::before { background: #C17A4D; }
 
-  .tool-icon { font-size: 28px; margin-bottom: 10px; display: block; }
-  .tool-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
-  .tool-desc { font-size: 13px; color: #9a9a9e; line-height: 1.5; }
-  .tool-meta {
-    display: inline-block;
-    margin-top: 12px;
-    font-size: 11px;
-    color: #d0d0d5;
-    background: rgba(255,255,255,0.08);
-    padding: 4px 10px;
-    border-radius: 100px;
+  .tool-title { font-size: 18px; font-weight: 700; margin-bottom: 14px; }
+
+  .tool-progress-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #9a9a9e;
+    margin-bottom: 8px;
   }
+  .tool-progress-row b { color: #fff; font-weight: 700; }
+  .tool-progress-track {
+    position: relative;
+    height: 8px;
+    border-radius: 100px;
+    background: rgba(255,255,255,0.08);
+    overflow: hidden;
+    display: flex;
+  }
+  .tool-progress-known { background: #8FA876; height: 100%; transition: width 0.3s; }
+  .tool-progress-review { background: #C17A4D; height: 100%; transition: width 0.3s; }
 
   footer {
     margin-top: auto;
@@ -94,18 +103,64 @@
   <div class="card-list">
     <a class="tool-card n5" href="./n5-vocab/">
       <div class="tool-title">N5 單字卡</div>
-      <div class="tool-desc">N5 核心單字閃卡練習,依動詞、形容詞、時間等分類,可標記熟悉度並追蹤進度。</div>
-      <span class="tool-meta">單字卡</span>
+      <div class="tool-progress-row">
+        <span id="n5-label">尚未開始</span>
+        <span><b id="n5-known">0</b> 已熟悉 ・ <b id="n5-total">0</b> 總數</span>
+      </div>
+      <div class="tool-progress-track">
+        <div class="tool-progress-known" id="n5-bar-known" style="width:0%"></div>
+        <div class="tool-progress-review" id="n5-bar-review" style="width:0%"></div>
+      </div>
     </a>
 
     <a class="tool-card gojuon" href="./gojuon/">
       <div class="tool-title">五十音練習</div>
-      <div class="tool-desc">平假名、片假名的清音、濁音、拗音練習,支援發音朗讀與總覽表檢視。</div>
-      <span class="tool-meta">五十音</span>
+      <div class="tool-progress-row">
+        <span id="gojuon-label">尚未開始</span>
+        <span><b id="gojuon-known">0</b> 已熟悉 ・ <b id="gojuon-total">0</b> 總數</span>
+      </div>
+      <div class="tool-progress-track">
+        <div class="tool-progress-known" id="gojuon-bar-known" style="width:0%"></div>
+        <div class="tool-progress-review" id="gojuon-bar-review" style="width:0%"></div>
+      </div>
     </a>
   </div>
 
   <footer>選擇一個工具開始學習</footer>
 </div>
+<script>
+function loadSummary(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch(e) { return null; }
+}
+
+function renderProgress(prefix, key) {
+  const s = loadSummary(key);
+  const known = s ? s.known : 0;
+  const review = s ? s.review : 0;
+  const total = s ? s.total : 0;
+
+  document.getElementById(prefix + "-known").textContent = known;
+  document.getElementById(prefix + "-total").textContent = total;
+  document.getElementById(prefix + "-bar-known").style.width = (total ? known/total*100 : 0) + "%";
+  document.getElementById(prefix + "-bar-review").style.width = (total ? review/total*100 : 0) + "%";
+
+  const label = document.getElementById(prefix + "-label");
+  if (!s || total === 0) {
+    label.textContent = "尚未開始";
+  } else if (known === total) {
+    label.textContent = "全部完成 🎉";
+  } else {
+    const pct = Math.round(known/total*100);
+    label.textContent = pct + "% 完成";
+  }
+}
+
+renderProgress("n5", "n5-vocab-summary");
+renderProgress("gojuon", "gojuon-summary");
+</script>
 </body>
 </html>
