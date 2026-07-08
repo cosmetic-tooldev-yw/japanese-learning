@@ -191,7 +191,7 @@
     </div>
 
     <div class="footer-row">
-      <button class="reset-link" id="resetBtn">清除全部進度</button>
+      <button class="reset-link" id="resetBtn">清除單字卡進度</button>
     </div>
   </div>
 
@@ -666,7 +666,18 @@ function saveProgress() {
       saveIndicator.classList.add("show");
       setTimeout(() => saveIndicator.classList.remove("show"), 900);
     } catch(e) {}
+    saveSummary();
   }, 250);
+}
+function saveSummary() {
+  try {
+    let known = 0, review = 0;
+    VOCAB.forEach(v => {
+      if (progress[v.id] === "known") known++;
+      else if (progress[v.id] === "review") review++;
+    });
+    localStorage.setItem("n5-vocab-summary", JSON.stringify({ known, review, total: VOCAB.length }));
+  } catch(e) {}
 }
 
 function matchesFilters(v) {
@@ -705,15 +716,25 @@ function updateStats() {
 
 const SOUND_ICON = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>';
 
+let speaking = false;
+
 function speak(text) {
   try {
     if (!('speechSynthesis' in window)) return;
+    if (speaking) return; // 防止連點造成佇列卡死
+    speaking = true;
     window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = "ja-JP";
-    u.rate = 0.7;
-    window.speechSynthesis.speak(u);
-  } catch(e) {}
+    setTimeout(() => {
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "ja-JP";
+      u.rate = 0.7;
+      u.onend = () => { speaking = false; };
+      u.onerror = () => { speaking = false; };
+      window.speechSynthesis.speak(u);
+      // 保底：避免 onend/onerror 都沒觸發時鎖死按鈕
+      setTimeout(() => { speaking = false; }, 4000);
+    }, 60);
+  } catch(e) { speaking = false; }
 }
 
 function statusColor(s) {
@@ -802,7 +823,7 @@ document.getElementById("shuffleBtn").addEventListener("click", e => {
 categoryFilter.addEventListener("change", () => { applyFilters(); if (currentView==="grid") renderGrid(); });
 statusFilter.addEventListener("change", applyFilters);
 document.getElementById("resetBtn").addEventListener("click", () => {
-  if (confirm("確定要清除所有學習進度嗎?這個動作無法復原。")) {
+  if (confirm("確定要清除單字卡學習進度嗎?這個動作無法復原。")) {
     progress = {};
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(progress)); } catch(e) {}
     updateStats();
@@ -863,6 +884,7 @@ function renderGrid() {
   buildCategoryOptions();
   loadProgress();
   applyFilters();
+  saveSummary();
 })();
 </script>
 </body>
