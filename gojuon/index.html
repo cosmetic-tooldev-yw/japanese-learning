@@ -236,7 +236,7 @@
     </div>
 
     <div class="footer-row">
-      <button class="reset-link" id="resetBtn">清除全部進度</button>
+      <button class="reset-link" id="resetBtn">清除五十音進度</button>
     </div>
   </div>
 
@@ -364,18 +364,39 @@ function saveProgress() {
       saveIndicator.classList.add("show");
       setTimeout(() => saveIndicator.classList.remove("show"), 900);
     } catch(e) {}
+    saveSummary();
   }, 250);
 }
+function saveSummary() {
+  try {
+    let known = 0, review = 0;
+    VOCAB.forEach(v => {
+      if (progress[v.id] === "known") known++;
+      else if (progress[v.id] === "review") review++;
+    });
+    localStorage.setItem("gojuon-summary", JSON.stringify({ known, review, total: VOCAB.length }));
+  } catch(e) {}
+}
+
+let speaking = false;
 
 function speak(text) {
   try {
     if (!('speechSynthesis' in window)) return;
+    if (speaking) return; // 防止連點造成佇列卡死
+    speaking = true;
     window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = "ja-JP";
-    u.rate = 0.5;
-    window.speechSynthesis.speak(u);
-  } catch(e) {}
+    setTimeout(() => {
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "ja-JP";
+      u.rate = 0.5;
+      u.onend = () => { speaking = false; };
+      u.onerror = () => { speaking = false; };
+      window.speechSynthesis.speak(u);
+      // 保底：避免 onend/onerror 都沒觸發時鎖死按鈕
+      setTimeout(() => { speaking = false; }, 4000);
+    }, 60);
+  } catch(e) { speaking = false; }
 }
 
 function matchesFilters(v) {
@@ -502,7 +523,7 @@ scriptFilter.addEventListener("change", () => { applyFilters(); if (currentView=
 groupFilter.addEventListener("change", () => { applyFilters(); if (currentView==="grid") renderGrid(); });
 statusFilter.addEventListener("change", applyFilters);
 document.getElementById("resetBtn").addEventListener("click", () => {
-  if (confirm("確定要清除所有學習進度嗎?這個動作無法復原。")) {
+  if (confirm("確定要清除五十音學習進度嗎?這個動作無法復原。")) {
     progress = {};
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(progress)); } catch(e) {}
     updateStats();
@@ -563,6 +584,7 @@ function renderGrid() {
 (function init() {
   loadProgress();
   applyFilters();
+  saveSummary();
 })();
 </script>
 </body>
