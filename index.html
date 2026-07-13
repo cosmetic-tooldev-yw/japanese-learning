@@ -159,8 +159,27 @@ function renderProgress(prefix, key) {
   }
 }
 
-renderProgress("n5", "n5-vocab-summary");
-renderProgress("gojuon", "gojuon-summary");
+function renderAllProgress() {
+  renderProgress("n5", "n5-vocab-summary");
+  renderProgress("gojuon", "gojuon-summary");
+}
+
+renderAllProgress();
+
+// 從單字卡/五十音頁面按上一頁返回時,部分瀏覽器會用 bfcache 還原頁面,
+// 不會重新執行上面的初次載入邏輯,所以在 pageshow 時強制重新讀取一次進度。
+window.addEventListener("pageshow", (event) => {
+  if (event.persisted) {
+    renderAllProgress();
+  }
+});
+
+// 保底：切回本頁分頁 / App 從背景返回前景時也重新整理一次
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") {
+    renderAllProgress();
+  }
+});
 </script>
 </body>
 </html>
