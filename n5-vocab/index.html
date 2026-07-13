@@ -57,8 +57,40 @@
   .progress-known { background: #8FA876; height: 100%; transition: width 0.3s; }
   .progress-review { background: #C17A4D; height: 100%; transition: width 0.3s; }
   .filters { display: flex; gap: 8px; margin-top: 14px; }
-  select { flex: 1; background: rgba(255,255,255,0.08); color: #fff; border: none; border-radius: 12px; padding: 10px 8px; font-size: 13px; text-align: center; appearance: none; -webkit-appearance: none; }
-  select option { color: #000; background: #fff; }
+  select { display: none; }
+  .dd { position: relative; flex: 1; }
+  .dd-btn {
+    width: 100%; background: rgba(255,255,255,0.08); color: #e4e4e7;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 12px; padding: 10px 12px; font-size: 13px; text-align: center;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    font-family: inherit;
+  }
+  .dd-btn .dd-chevron { width: 12px; height: 12px; flex-shrink: 0; transition: transform 0.2s; opacity: 0.6; }
+  .dd.open .dd-btn .dd-chevron { transform: rotate(180deg); }
+  .dd-panel {
+    position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 40;
+    background: #232325; border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px; padding: 6px;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.45);
+    max-height: 280px; overflow-y: auto;
+    display: none;
+  }
+  .dd.open .dd-panel { display: block; }
+  .dd-opt {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    position: relative;
+    padding: 10px 10px; border-radius: 9px; font-size: 14px; color: #e4e4e7;
+  }
+  .dd-opt:hover { background: rgba(255,255,255,0.1); }
+  .dd-opt:active { background: rgba(255,255,255,0.16); }
+  .dd-opt.selected { color: #fff; font-weight: 600; }
+  .dd-opt .dd-check {
+    position: absolute; left: 10px; width: 14px; height: 14px; opacity: 0;
+    color: #8FA876;
+  }
+  .dd-opt.selected .dd-check { opacity: 1; }
+
   .card-area { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 18px; min-height: 260px; }
   .card-counter { font-size: 12px; color: #8e8e93; margin-bottom: 10px; }
   .card-scene { width: 100%; max-width: 340px; height: 230px; perspective: 1200px; }
@@ -169,11 +201,25 @@
   </div>
 
   <div class="filters">
+    <div class="dd" id="categoryDD">
+      <button type="button" class="dd-btn" id="categoryDDBtn">
+        <span id="categoryDDLabel">全部分類</span>
+        <svg class="dd-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+      <div class="dd-panel" id="categoryDDPanel"></div>
+    </div>
     <select id="categoryFilter"></select>
   </div>
 
   <div id="flashView">
     <div class="filters" style="margin-top:8px;">
+      <div class="dd" id="statusDD">
+        <button type="button" class="dd-btn" id="statusDDBtn">
+          <span id="statusDDLabel">全部狀態</span>
+          <svg class="dd-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <div class="dd-panel" id="statusDDPanel"></div>
+      </div>
       <select id="statusFilter">
         <option value="all">全部狀態</option>
         <option value="new">未學習</option>
@@ -245,62 +291,62 @@ const VOCAB = [
   {id:42,kanji:"切る",reading:"きる",romaji:"kiru",meaning:"切",category:"動詞"},
   {id:43,kanji:"始まる",reading:"はじまる",romaji:"hajimaru",meaning:"開始",category:"動詞"},
   {id:44,kanji:"終わる",reading:"おわる",romaji:"owaru",meaning:"結束",category:"動詞"},
-  {id:45,kanji:"会う",reading:"あう",romaji:"au",meaning:"見面",category:"動詞"},
-  {id:46,kanji:"遊ぶ",reading:"あそぶ",romaji:"asobu",meaning:"玩",category:"動詞"},
-  {id:47,kanji:"浴びる",reading:"あびる",romaji:"abiru",meaning:"沖澡;淋浴",category:"動詞"},
-  {id:48,kanji:"急ぐ",reading:"いそぐ",romaji:"isogu",meaning:"著急;趕緊",category:"動詞"},
-  {id:49,kanji:"言う",reading:"いう",romaji:"iu",meaning:"說;叫做",category:"動詞"},
-  {id:50,kanji:"要る",reading:"いる",romaji:"iru",meaning:"需要",category:"動詞"},
-  {id:51,kanji:"入れる",reading:"いれる",romaji:"ireru",meaning:"放入;加入",category:"動詞"},
-  {id:52,kanji:"生まれる",reading:"うまれる",romaji:"umareru",meaning:"出生",category:"動詞"},
-  {id:53,kanji:"売る",reading:"うる",romaji:"uru",meaning:"賣;銷售",category:"動詞"},
-  {id:54,kanji:"置く",reading:"おく",romaji:"oku",meaning:"放;放置",category:"動詞"},
-  {id:55,kanji:"送る",reading:"おくる",romaji:"okuru",meaning:"送;寄送",category:"動詞"},
-  {id:56,kanji:"覚える",reading:"おぼえる",romaji:"oboeru",meaning:"記;背;記住",category:"動詞"},
-  {id:57,kanji:"思う",reading:"おもう",romaji:"omou",meaning:"想;認為;覺得",category:"動詞"},
-  {id:58,kanji:"降りる",reading:"おりる",romaji:"oriru",meaning:"下車",category:"動詞"},
-  {id:59,kanji:"かかる",reading:"かかる",romaji:"kakaru",meaning:"花費(錢/時間)",category:"動詞"},
-  {id:60,kanji:"考える",reading:"かんがえる",romaji:"kangaeru",meaning:"考慮;思考",category:"動詞"},
-  {id:61,kanji:"聞く",reading:"きく",romaji:"kiku",meaning:"聽;問",category:"動詞"},
-  {id:62,kanji:"決まる",reading:"きまる",romaji:"kimaru",meaning:"決定",category:"動詞"},
-  {id:63,kanji:"決める",reading:"きめる",romaji:"kimeru",meaning:"做決定",category:"動詞"},
-  {id:64,kanji:"着る",reading:"きる",romaji:"kiru",meaning:"穿(衣服)",category:"動詞"},
-  {id:65,kanji:"来る",reading:"くる",romaji:"kuru",meaning:"來",category:"動詞"},
-  {id:66,kanji:"消す",reading:"けす",romaji:"kesu",meaning:"擦掉;熄滅;關",category:"動詞"},
-  {id:67,kanji:"調べる",reading:"しらべる",romaji:"shiraberu",meaning:"調查;搜索",category:"動詞"},
-  {id:68,kanji:"住む",reading:"すむ",romaji:"sumu",meaning:"住",category:"動詞"},
-  {id:69,kanji:"出す",reading:"だす",romaji:"dasu",meaning:"寄(信);提交",category:"動詞"},
-  {id:70,kanji:"出かける",reading:"でかける",romaji:"dekakeru",meaning:"外出;出門",category:"動詞"},
-  {id:71,kanji:"できる",reading:"できる",romaji:"dekiru",meaning:"能;可以;完工",category:"動詞"},
-  {id:72,kanji:"手伝う",reading:"てつだう",romaji:"tetsudau",meaning:"幫忙",category:"動詞"},
-  {id:73,kanji:"とる",reading:"とる",romaji:"toru",meaning:"拍(照);拿(東西)",category:"動詞"},
-  {id:74,kanji:"乗る",reading:"のる",romaji:"noru",meaning:"乘;坐;騎",category:"動詞"},
-  {id:75,kanji:"登る",reading:"のぼる",romaji:"noboru",meaning:"爬;登(山)",category:"動詞"},
-  {id:76,kanji:"履く",reading:"はく",romaji:"haku",meaning:"穿(鞋/褲)",category:"動詞"},
-  {id:77,kanji:"払う",reading:"はらう",romaji:"harau",meaning:"付(錢)",category:"動詞"},
-  {id:78,kanji:"弾く",reading:"ひく",romaji:"hiku",meaning:"彈(吉他/鋼琴)",category:"動詞"},
-  {id:79,kanji:"磨く",reading:"みがく",romaji:"migaku",meaning:"刷(牙)",category:"動詞"},
-  {id:80,kanji:"もらう",reading:"もらう",romaji:"morau",meaning:"得到;領受",category:"動詞"},
-  {id:81,kanji:"やる",reading:"やる",romaji:"yaru",meaning:"做(作業/遊戲);上映",category:"動詞"},
-  {id:82,kanji:"呼ぶ",reading:"よぶ",romaji:"yobu",meaning:"叫;邀請",category:"動詞"},
-  {id:83,kanji:"予約する",reading:"よやくする",romaji:"yoyaku suru",meaning:"預約;預訂",category:"動詞"},
-  {id:84,kanji:"忘れる",reading:"わすれる",romaji:"wasureru",meaning:"忘;忘記",category:"動詞"},
-  {id:85,kanji:"降る",reading:"ふる",romaji:"furu",meaning:"下(雨/雪)",category:"動詞"},
-  {id:86,kanji:"踏む",reading:"ふむ",romaji:"fumu",meaning:"踩;踏",category:"動詞"},
-  {id:87,kanji:"注文する",reading:"ちゅうもんする",romaji:"chuumon suru",meaning:"點菜;下訂單",category:"動詞"},
-  {id:88,kanji:"結婚する",reading:"けっこんする",romaji:"kekkon suru",meaning:"結婚",category:"動詞"},
-  {id:89,kanji:"死ぬ",reading:"しぬ",romaji:"shinu",meaning:"死亡",category:"動詞"},
-  {id:90,kanji:"脱ぐ",reading:"ぬぐ",romaji:"nugu",meaning:"脫;摘掉",category:"動詞"},
-  {id:91,kanji:"間違える",reading:"まちがえる",romaji:"machigaeru",meaning:"搞錯;弄錯",category:"動詞"},
-  {id:92,kanji:"吸う",reading:"すう",romaji:"suu",meaning:"吸;抽(菸)",category:"動詞"},
-  {id:93,kanji:"咲く",reading:"さく",romaji:"saku",meaning:"開(花)",category:"動詞"},
-  {id:94,kanji:"着く",reading:"つく",romaji:"tsuku",meaning:"到;抵達",category:"動詞"},
-  {id:95,kanji:"疲れる",reading:"つかれる",romaji:"tsukareru",meaning:"累;疲憊",category:"動詞"},
-  {id:96,kanji:"届く",reading:"とどく",romaji:"todoku",meaning:"到達;收到",category:"動詞"},
-  {id:97,kanji:"直る",reading:"なおる",romaji:"naoru",meaning:"(病)好;痊癒",category:"動詞"},
-  {id:98,kanji:"なくなる",reading:"なくなる",romaji:"nakunaru",meaning:"(東西)遺失;消失",category:"動詞"},
-  {id:99,kanji:"習う",reading:"ならう",romaji:"narau",meaning:"學",category:"動詞"},
-  {id:100,kanji:"かぶる",reading:"かぶる",romaji:"kaburu",meaning:"戴(帽子)",category:"動詞"},
+  {id:45,kanji:"会う",reading:"あいます",romaji:"aimasu",meaning:"見面",category:"動詞"},
+  {id:46,kanji:"遊ぶ",reading:"あそびます",romaji:"asobimasu",meaning:"玩",category:"動詞"},
+  {id:47,kanji:"浴びる",reading:"あびます",romaji:"abimasu",meaning:"沖澡;淋浴",category:"動詞"},
+  {id:48,kanji:"急ぐ",reading:"いそぎます",romaji:"isogimasu",meaning:"著急;趕緊",category:"動詞"},
+  {id:49,kanji:"言う",reading:"いいます",romaji:"iimasu",meaning:"說;叫做",category:"動詞"},
+  {id:50,kanji:"要る",reading:"いります",romaji:"irimasu",meaning:"需要",category:"動詞"},
+  {id:51,kanji:"入れる",reading:"いれます",romaji:"iremasu",meaning:"放入;加入",category:"動詞"},
+  {id:52,kanji:"生まれる",reading:"うまれます",romaji:"umaremasu",meaning:"出生",category:"動詞"},
+  {id:53,kanji:"売る",reading:"うります",romaji:"urimasu",meaning:"賣;銷售",category:"動詞"},
+  {id:54,kanji:"置く",reading:"おきます",romaji:"okimasu",meaning:"放;放置",category:"動詞"},
+  {id:55,kanji:"送る",reading:"おくります",romaji:"okurimasu",meaning:"送;寄送",category:"動詞"},
+  {id:56,kanji:"覚える",reading:"おぼえます",romaji:"oboemasu",meaning:"記;背;記住",category:"動詞"},
+  {id:57,kanji:"思う",reading:"おもいます",romaji:"omoimasu",meaning:"想;認為;覺得",category:"動詞"},
+  {id:58,kanji:"降りる",reading:"おります",romaji:"orimasu",meaning:"下車",category:"動詞"},
+  {id:59,kanji:"かかる",reading:"かかります",romaji:"kakarimasu",meaning:"花費(錢/時間)",category:"動詞"},
+  {id:60,kanji:"考える",reading:"かんがえます",romaji:"kangaemasu",meaning:"考慮;思考",category:"動詞"},
+  {id:61,kanji:"聞く",reading:"ききます",romaji:"kikimasu",meaning:"聽;問",category:"動詞"},
+  {id:62,kanji:"決まる",reading:"きまります",romaji:"kimarimasu",meaning:"決定",category:"動詞"},
+  {id:63,kanji:"決める",reading:"きめます",romaji:"kimemasu",meaning:"做決定",category:"動詞"},
+  {id:64,kanji:"着る",reading:"きます",romaji:"kimasu",meaning:"穿(衣服)",category:"動詞"},
+  {id:65,kanji:"来る",reading:"きます",romaji:"kimasu",meaning:"來",category:"動詞"},
+  {id:66,kanji:"消す",reading:"けします",romaji:"keshimasu",meaning:"擦掉;熄滅;關",category:"動詞"},
+  {id:67,kanji:"調べる",reading:"しらべます",romaji:"shirabemasu",meaning:"調查;搜索",category:"動詞"},
+  {id:68,kanji:"住む",reading:"すみます",romaji:"sumimasu",meaning:"住",category:"動詞"},
+  {id:69,kanji:"出す",reading:"だします",romaji:"dashimasu",meaning:"寄(信);提交",category:"動詞"},
+  {id:70,kanji:"出かける",reading:"でかけます",romaji:"dekakemasu",meaning:"外出;出門",category:"動詞"},
+  {id:71,kanji:"できる",reading:"できます",romaji:"dekimasu",meaning:"能;可以;完工",category:"動詞"},
+  {id:72,kanji:"手伝う",reading:"てつだいます",romaji:"tetsudaimasu",meaning:"幫忙",category:"動詞"},
+  {id:73,kanji:"とる",reading:"とります",romaji:"torimasu",meaning:"拍(照);拿(東西)",category:"動詞"},
+  {id:74,kanji:"乗る",reading:"のります",romaji:"norimasu",meaning:"乘;坐;騎",category:"動詞"},
+  {id:75,kanji:"登る",reading:"のぼります",romaji:"noborimasu",meaning:"爬;登(山)",category:"動詞"},
+  {id:76,kanji:"履く",reading:"はきます",romaji:"hakimasu",meaning:"穿(鞋/褲)",category:"動詞"},
+  {id:77,kanji:"払う",reading:"はらいます",romaji:"haraimasu",meaning:"付(錢)",category:"動詞"},
+  {id:78,kanji:"弾く",reading:"ひきます",romaji:"hikimasu",meaning:"彈(吉他/鋼琴)",category:"動詞"},
+  {id:79,kanji:"磨く",reading:"みがきます",romaji:"migakimasu",meaning:"刷(牙)",category:"動詞"},
+  {id:80,kanji:"もらう",reading:"もらいます",romaji:"moraimasu",meaning:"得到;領受",category:"動詞"},
+  {id:81,kanji:"やる",reading:"やります",romaji:"yarimasu",meaning:"做(作業/遊戲);上映",category:"動詞"},
+  {id:82,kanji:"呼ぶ",reading:"よびます",romaji:"yobimasu",meaning:"叫;邀請",category:"動詞"},
+  {id:83,kanji:"予約する",reading:"よやくします",romaji:"yoyaku shimasu",meaning:"預約;預訂",category:"動詞"},
+  {id:84,kanji:"忘れる",reading:"わすれます",romaji:"wasuremasu",meaning:"忘;忘記",category:"動詞"},
+  {id:85,kanji:"降る",reading:"ふります",romaji:"furimasu",meaning:"下(雨/雪)",category:"動詞"},
+  {id:86,kanji:"踏む",reading:"ふみます",romaji:"fumimasu",meaning:"踩;踏",category:"動詞"},
+  {id:87,kanji:"注文する",reading:"ちゅうもんします",romaji:"chuumon shimasu",meaning:"點菜;下訂單",category:"動詞"},
+  {id:88,kanji:"結婚する",reading:"けっこんします",romaji:"kekkon shimasu",meaning:"結婚",category:"動詞"},
+  {id:89,kanji:"死ぬ",reading:"しにます",romaji:"shinimasu",meaning:"死亡",category:"動詞"},
+  {id:90,kanji:"脱ぐ",reading:"ぬぎます",romaji:"nugimasu",meaning:"脫;摘掉",category:"動詞"},
+  {id:91,kanji:"間違える",reading:"まちがえます",romaji:"machigaemasu",meaning:"搞錯;弄錯",category:"動詞"},
+  {id:92,kanji:"吸う",reading:"すいます",romaji:"suimasu",meaning:"吸;抽(菸)",category:"動詞"},
+  {id:93,kanji:"咲く",reading:"さきます",romaji:"sakimasu",meaning:"開(花)",category:"動詞"},
+  {id:94,kanji:"着く",reading:"つきます",romaji:"tsukimasu",meaning:"到;抵達",category:"動詞"},
+  {id:95,kanji:"疲れる",reading:"つかれます",romaji:"tsukaremasu",meaning:"累;疲憊",category:"動詞"},
+  {id:96,kanji:"届く",reading:"とどきます",romaji:"todokimasu",meaning:"到達;收到",category:"動詞"},
+  {id:97,kanji:"直る",reading:"なおります",romaji:"naorimasu",meaning:"(病)好;痊癒",category:"動詞"},
+  {id:98,kanji:"なくなる",reading:"なくなります",romaji:"nakunarimasu",meaning:"(東西)遺失;消失",category:"動詞"},
+  {id:99,kanji:"習う",reading:"ならいます",romaji:"naraimasu",meaning:"學",category:"動詞"},
+  {id:100,kanji:"かぶる",reading:"かぶります",romaji:"kaburimasu",meaning:"戴(帽子)",category:"動詞"},
   // 形容詞
   {id:101,kanji:"大きい",reading:"おおきい",romaji:"ookii",meaning:"大的",category:"形容詞"},
   {id:102,kanji:"小さい",reading:"ちいさい",romaji:"chiisai",meaning:"小的",category:"形容詞"},
@@ -628,292 +674,6 @@ const VOCAB = [
   {id:418,kanji:"となり",reading:"となり",romaji:"tonari",meaning:"旁邊",category:"身體方向"},
   {id:419,kanji:"近く",reading:"ちかく",romaji:"chikaku",meaning:"附近",category:"身體方向"},
   {id:420,kanji:"向こう",reading:"むこう",romaji:"mukou",meaning:"對面;那邊",category:"身體方向"},
-  // 補充單字（N5 md 清單）
-  {id:421,kanji:"間",reading:"あいだ",romaji:"aida",meaning:"之間;中間",category:"時間"},
-  {id:422,kanji:"青",reading:"あお",romaji:"ao",meaning:"藍色",category:"自然"},
-  {id:423,kanji:"赤",reading:"あか",romaji:"aka",meaning:"紅色",category:"自然"},
-  {id:424,kanji:"性格が明るい",reading:"せいかくがあかるい",romaji:"seikaku ga akarui",meaning:"(性格)開朗",category:"形容詞"},
-  {id:425,kanji:"あげる",reading:"あげる",romaji:"ageru",meaning:"給予",category:"動詞"},
-  {id:426,kanji:"あそこ",reading:"あそこ",romaji:"asoko",meaning:"那裡",category:"身體方向"},
-  {id:427,kanji:"あちら",reading:"あちら",romaji:"achira",meaning:"那邊",category:"身體方向"},
-  {id:428,kanji:"あっち",reading:"あっち",romaji:"acchi",meaning:"那邊(口語)",category:"身體方向"},
-  {id:429,kanji:"あと〜",reading:"あと",romaji:"ato",meaning:"再過~",category:"時間"},
-  {id:430,kanji:"あの",reading:"あの",romaji:"ano",meaning:"那個",category:"副詞"},
-  {id:431,kanji:"あまり〜ない",reading:"あまり",romaji:"amari",meaning:"不太~",category:"副詞"},
-  {id:432,kanji:"アメリカ人",reading:"アメリカじん",romaji:"amerikajin",meaning:"美國人",category:"人物地點"},
-  {id:433,kanji:"歩いてくる",reading:"あるいてくる",romaji:"aruite kuru",meaning:"走路來",category:"動詞"},
-  {id:434,kanji:"アルバイト",reading:"アルバイト",romaji:"arubaito",meaning:"打工",category:"物品"},
-  {id:435,kanji:"あれ",reading:"あれ",romaji:"are",meaning:"那個",category:"身體方向"},
-  {id:436,kanji:"いい",reading:"いい",romaji:"ii",meaning:"好",category:"形容詞"},
-  {id:437,kanji:"いいえ",reading:"いいえ",romaji:"iie",meaning:"不",category:"副詞"},
-  {id:438,kanji:"家",reading:"いえ",romaji:"ie",meaning:"家;房子",category:"人物地點"},
-  {id:439,kanji:"いかが",reading:"いかが",romaji:"ikaga",meaning:"如何(敬語)",category:"副詞"},
-  {id:440,kanji:"いくつ",reading:"いくつ",romaji:"ikutsu",meaning:"幾歲;幾個",category:"副詞"},
-  {id:441,kanji:"いくら",reading:"いくら",romaji:"ikura",meaning:"多少錢",category:"副詞"},
-  {id:442,kanji:"イタリア",reading:"イタリア",romaji:"itaria",meaning:"義大利",category:"人物地點"},
-  {id:443,kanji:"いつ",reading:"いつ",romaji:"itsu",meaning:"什麼時候",category:"時間"},
-  {id:444,kanji:"今から",reading:"いまから",romaji:"imakara",meaning:"現在開始",category:"時間"},
-  {id:445,kanji:"妹さん",reading:"いもうとさん",romaji:"imōtosan",meaning:"令妹(敬語)",category:"人物地點"},
-  {id:446,kanji:"インターネット",reading:"インターネット",romaji:"intānetto",meaning:"網際網路",category:"物品"},
-  {id:447,kanji:"インターネットをする",reading:"インターネットをする",romaji:"intaanetto wo suru",meaning:"上網",category:"動詞"},
-  {id:448,kanji:"歌",reading:"うた",romaji:"uta",meaning:"歌",category:"物品"},
-  {id:449,kanji:"うち",reading:"うち",romaji:"uchi",meaning:"家",category:"人物地點"},
-  {id:450,kanji:"うら",reading:"うら",romaji:"ura",meaning:"背面;內部",category:"身體方向"},
-  {id:451,kanji:"うん",reading:"うん",romaji:"un",meaning:"嗯(口語)",category:"副詞"},
-  {id:452,kanji:"絵",reading:"え",romaji:"e",meaning:"畫",category:"物品"},
-  {id:453,kanji:"映画館",reading:"えいがかん",romaji:"eigakan",meaning:"電影院",category:"人物地點"},
-  {id:454,kanji:"英語",reading:"えいご",romaji:"eigo",meaning:"英語",category:"物品"},
-  {id:455,kanji:"ええ",reading:"ええ",romaji:"ee",meaning:"是,對",category:"副詞"},
-  {id:456,kanji:"駅前",reading:"えきまえ",romaji:"ekimae",meaning:"車站前",category:"人物地點"},
-  {id:457,kanji:"大勢",reading:"おおぜい",romaji:"ōzei",meaning:"很多(人)",category:"副詞"},
-  {id:458,kanji:"お母さん",reading:"おかあさん",romaji:"okāsan",meaning:"令堂(敬語)",category:"人物地點"},
-  {id:459,kanji:"お菓子",reading:"おかし",romaji:"okashi",meaning:"零食,點心",category:"物品"},
-  {id:460,kanji:"お客さん",reading:"おきゃくさん",romaji:"okyakusan",meaning:"客人(敬語)",category:"人物地點"},
-  {id:461,kanji:"奥さん",reading:"おくさん",romaji:"okusan",meaning:"尊夫人(敬語)",category:"人物地點"},
-  {id:462,kanji:"お薬",reading:"おくすり",romaji:"okusuri",meaning:"藥(敬語)",category:"物品"},
-  {id:463,kanji:"お酒",reading:"おさけ",romaji:"osake",meaning:"酒",category:"物品"},
-  {id:464,kanji:"おじいさん",reading:"おじいさん",romaji:"ojiisan",meaning:"爺爺,外公",category:"人物地點"},
-  {id:465,kanji:"お時間",reading:"おじかん",romaji:"ojikan",meaning:"時間(敬語)",category:"時間"},
-  {id:466,kanji:"お好きなもの",reading:"おすきなもの",romaji:"osukina mono",meaning:"喜歡的東西(敬語)",category:"物品"},
-  {id:467,kanji:"遅くまで",reading:"おそくまで",romaji:"osoku made",meaning:"到很晚",category:"時間"},
-  {id:468,kanji:"お寺",reading:"おてら",romaji:"otera",meaning:"廟,寺廟",category:"人物地點"},
-  {id:469,kanji:"お父さん",reading:"おとうさん",romaji:"otōsan",meaning:"令尊(敬語)",category:"人物地點"},
-  {id:470,kanji:"弟さん",reading:"おとうとさん",romaji:"otōtosan",meaning:"令弟(敬語)",category:"人物地點"},
-  {id:471,kanji:"男の子",reading:"おとこのこ",romaji:"otoko no ko",meaning:"男孩",category:"人物地點"},
-  {id:472,kanji:"お兄さん",reading:"おにいさん",romaji:"oniisan",meaning:"令兄(敬語)",category:"人物地點"},
-  {id:473,kanji:"お姉さん",reading:"おねえさん",romaji:"onēsan",meaning:"令姊(敬語)",category:"人物地點"},
-  {id:474,kanji:"おばあさん",reading:"おばあさん",romaji:"obāsan",meaning:"奶奶,外婆",category:"人物地點"},
-  {id:475,kanji:"お風呂",reading:"おふろ",romaji:"ofuro",meaning:"浴室,澡堂",category:"人物地點"},
-  {id:476,kanji:"お弁当",reading:"おべんとう",romaji:"obentō",meaning:"便當",category:"物品"},
-  {id:477,kanji:"温泉",reading:"おんせん",romaji:"onsen",meaning:"溫泉",category:"人物地點"},
-  {id:478,kanji:"お飲み物",reading:"おのみもの",romaji:"onomimono",meaning:"飲料(敬語)",category:"物品"},
-  {id:479,kanji:"お話",reading:"おはなし",romaji:"ohanashi",meaning:"話;故事(敬語)",category:"物品"},
-  {id:480,kanji:"火",reading:"か",romaji:"ka",meaning:"星期二",category:"時間"},
-  {id:481,kanji:"会議",reading:"かいぎ",romaji:"kaigi",meaning:"會議",category:"物品"},
-  {id:482,kanji:"会議をする",reading:"かいぎをする",romaji:"kaigi wo suru",meaning:"開會",category:"動詞"},
-  {id:483,kanji:"外国",reading:"がいこく",romaji:"gaikoku",meaning:"外國",category:"人物地點"},
-  {id:484,kanji:"会場",reading:"かいじょう",romaji:"kaijō",meaning:"會場",category:"人物地點"},
-  {id:485,kanji:"買い物",reading:"かいもの",romaji:"kaimono",meaning:"購物",category:"物品"},
-  {id:486,kanji:"買い物をする",reading:"かいものをする",romaji:"kaimono wo suru",meaning:"買東西",category:"動詞"},
-  {id:487,kanji:"帰ってくる",reading:"かえってくる",romaji:"kaette kuru",meaning:"回來",category:"動詞"},
-  {id:488,kanji:"かける",reading:"かける",romaji:"kakeru",meaning:"打(電話)",category:"動詞"},
-  {id:489,kanji:"方",reading:"かた",romaji:"kata",meaning:"人(敬語)",category:"人物地點"},
-  {id:490,kanji:"〜方",reading:"〜がた",romaji:"gata",meaning:"(們,敬語)",category:"人物地點"},
-  {id:491,kanji:"形",reading:"かたち",romaji:"katachi",meaning:"形狀",category:"物品"},
-  {id:492,kanji:"買ってくる",reading:"かってくる",romaji:"katte kuru",meaning:"買來",category:"動詞"},
-  {id:493,kanji:"紙",reading:"かみ",romaji:"kami",meaning:"紙",category:"物品"},
-  {id:494,kanji:"紙芝居",reading:"かみしばい",romaji:"kamishibai",meaning:"紙劇場",category:"物品"},
-  {id:495,kanji:"〜から",reading:"〜から",romaji:"kara",meaning:"從~",category:"副詞"},
-  {id:496,kanji:"カラオケ",reading:"カラオケ",romaji:"karaoke",meaning:"卡拉OK",category:"物品"},
-  {id:497,kanji:"カラオケをする",reading:"カラオケをする",romaji:"karaoke wo suru",meaning:"唱卡拉OK",category:"動詞"},
-  {id:498,kanji:"韓国",reading:"かんこく",romaji:"kankoku",meaning:"韓國",category:"人物地點"},
-  {id:499,kanji:"喫茶店",reading:"きっさてん",romaji:"kissaten",meaning:"咖啡店",category:"人物地點"},
-  {id:500,kanji:"性格がきびしい",reading:"せいかくがきびしい",romaji:"kibishii",meaning:"(性格)嚴格",category:"形容詞"},
-  {id:501,kanji:"客",reading:"きゃく",romaji:"kyaku",meaning:"客人",category:"人物地點"},
-  {id:502,kanji:"きれいに",reading:"きれいに",romaji:"kirei ni",meaning:"乾淨地",category:"副詞"},
-  {id:503,kanji:"金",reading:"きん",romaji:"kin",meaning:"星期五",category:"時間"},
-  {id:504,kanji:"ください",reading:"ください",romaji:"kudasai",meaning:"請給我",category:"副詞"},
-  {id:505,kanji:"国",reading:"くに",romaji:"kuni",meaning:"國家",category:"人物地點"},
-  {id:506,kanji:"〜くらい",reading:"〜くらい",romaji:"kurai",meaning:"~左右",category:"副詞"},
-  {id:507,kanji:"携帯電話",reading:"けいたいでんわ",romaji:"keitai denwa",meaning:"手機",category:"物品"},
-  {id:508,kanji:"ケース",reading:"ケース",romaji:"kēsu",meaning:"盒子;情況",category:"物品"},
-  {id:509,kanji:"景色",reading:"けしき",romaji:"keshiki",meaning:"景色",category:"自然"},
-  {id:510,kanji:"月",reading:"げつ",romaji:"getsu",meaning:"星期一",category:"時間"},
-  {id:511,kanji:"見学",reading:"けんがく",romaji:"kengaku",meaning:"參觀學習",category:"物品"},
-  {id:512,kanji:"元気がない",reading:"げんきがない",romaji:"genki ga nai",meaning:"沒精神",category:"形容詞"},
-  {id:513,kanji:"紅茶",reading:"こうちゃ",romaji:"kōcha",meaning:"紅茶",category:"物品"},
-  {id:514,kanji:"ご家族",reading:"ごかぞく",romaji:"gokazoku",meaning:"您的家人(敬語)",category:"人物地點"},
-  {id:515,kanji:"ご兄弟",reading:"ごきょうだい",romaji:"gokyōdai",meaning:"您的兄弟姐妹(敬語)",category:"人物地點"},
-  {id:516,kanji:"ここ",reading:"ここ",romaji:"koko",meaning:"這裡",category:"身體方向"},
-  {id:517,kanji:"ございます",reading:"ございます",romaji:"gozaimasu",meaning:"有(敬語)",category:"動詞"},
-  {id:518,kanji:"自由に",reading:"じゆうに",romaji:"jiyū ni",meaning:"自由地",category:"副詞"},
-  {id:519,kanji:"ご主人",reading:"ごしゅじん",romaji:"goshujin",meaning:"尊夫(敬語)",category:"人物地點"},
-  {id:520,kanji:"こちら",reading:"こちら",romaji:"kochira",meaning:"這裡",category:"身體方向"},
-  {id:521,kanji:"こっち",reading:"こっち",romaji:"kocchi",meaning:"這邊(口語)",category:"身體方向"},
-  {id:522,kanji:"子どもさん",reading:"こどもさん",romaji:"kodomosan",meaning:"您的孩子(敬語)",category:"人物地點"},
-  {id:523,kanji:"この〜",reading:"この",romaji:"kono",meaning:"這個~",category:"副詞"},
-  {id:524,kanji:"この後",reading:"このあと",romaji:"kono ato",meaning:"之後",category:"時間"},
-  {id:525,kanji:"この辺",reading:"このへん",romaji:"kono hen",meaning:"這一帶",category:"人物地點"},
-  {id:526,kanji:"コピー",reading:"コピー",romaji:"kopī",meaning:"影印",category:"物品"},
-  {id:527,kanji:"コピーをする",reading:"コピーをする",romaji:"kopii wo suru",meaning:"影印",category:"動詞"},
-  {id:528,kanji:"ご両親",reading:"ごりょうしん",romaji:"goryōshin",meaning:"您的父母(敬語)",category:"人物地點"},
-  {id:529,kanji:"これ",reading:"これ",romaji:"kore",meaning:"這個",category:"身體方向"},
-  {id:530,kanji:"これから",reading:"これから",romaji:"korekara",meaning:"從現在起",category:"時間"},
-  {id:531,kanji:"〜ごろ",reading:"〜ごろ",romaji:"goro",meaning:"~左右(時間)",category:"時間"},
-  {id:532,kanji:"コンサート",reading:"コンサート",romaji:"konsāto",meaning:"音樂會",category:"物品"},
-  {id:533,kanji:"今度",reading:"こんど",romaji:"kondo",meaning:"這次",category:"時間"},
-  {id:534,kanji:"今晩",reading:"こんばん",romaji:"konban",meaning:"今晚",category:"時間"},
-  {id:535,kanji:"先に",reading:"さきに",romaji:"sakini",meaning:"先,先前",category:"副詞"},
-  {id:536,kanji:"サッカー",reading:"サッカー",romaji:"sakkā",meaning:"足球",category:"物品"},
-  {id:537,kanji:"さっき",reading:"さっき",romaji:"sakki",meaning:"剛剛",category:"時間"},
-  {id:538,kanji:"〜さん",reading:"〜さん",romaji:"san",meaning:"~先生/小姐",category:"人物地點"},
-  {id:539,kanji:"散歩",reading:"さんぽ",romaji:"sanpo",meaning:"散步",category:"物品"},
-  {id:540,kanji:"散歩をする",reading:"さんぽをする",romaji:"sanpo wo suru",meaning:"散步",category:"動詞"},
-  {id:541,kanji:"試合",reading:"しあい",romaji:"shiai",meaning:"比賽",category:"物品"},
-  {id:542,kanji:"仕事",reading:"しごと",romaji:"shigoto",meaning:"工作",category:"物品"},
-  {id:543,kanji:"知っている",reading:"しっている",romaji:"shitte iru",meaning:"知道",category:"動詞"},
-  {id:544,kanji:"事務室",reading:"じむしつ",romaji:"jimushitsu",meaning:"辦公室",category:"人物地點"},
-  {id:545,kanji:"じゃ",reading:"じゃ",romaji:"ja",meaning:"那麼(口語)",category:"副詞"},
-  {id:546,kanji:"じゃあ",reading:"じゃあ",romaji:"jā",meaning:"那麼(口語)",category:"副詞"},
-  {id:547,kanji:"シャワー",reading:"シャワー",romaji:"shawā",meaning:"淋浴",category:"物品"},
-  {id:548,kanji:"住所",reading:"じゅうしょ",romaji:"jūsho",meaning:"地址",category:"人物地點"},
-  {id:549,kanji:"趣味",reading:"しゅみ",romaji:"shumi",meaning:"興趣",category:"物品"},
-  {id:550,kanji:"種類",reading:"しゅるい",romaji:"shurui",meaning:"種類",category:"物品"},
-  {id:551,kanji:"順番",reading:"じゅんばん",romaji:"junban",meaning:"順序",category:"物品"},
-  {id:552,kanji:"食事",reading:"しょくじ",romaji:"shokuji",meaning:"用餐",category:"物品"},
-  {id:553,kanji:"食事をする",reading:"しょくじをする",romaji:"shokuji wo suru",meaning:"吃飯",category:"動詞"},
-  {id:554,kanji:"白",reading:"しろ",romaji:"shiro",meaning:"白色",category:"自然"},
-  {id:555,kanji:"心配する",reading:"しんぱいする",romaji:"shinpai suru",meaning:"擔心",category:"動詞"},
-  {id:556,kanji:"水泳",reading:"すいえい",romaji:"suiei",meaning:"游泳",category:"物品"},
-  {id:557,kanji:"〜すぎ",reading:"〜すぎ",romaji:"sugi",meaning:"過~(時間)",category:"時間"},
-  {id:558,kanji:"スキー",reading:"スキー",romaji:"sukī",meaning:"滑雪",category:"物品"},
-  {id:559,kanji:"好きなもの",reading:"すきなもの",romaji:"sukina mono",meaning:"喜歡的東西",category:"物品"},
-  {id:560,kanji:"すぐに",reading:"すぐに",romaji:"sugu ni",meaning:"馬上",category:"副詞"},
-  {id:561,kanji:"スケート",reading:"スケート",romaji:"sukēto",meaning:"滑冰",category:"物品"},
-  {id:562,kanji:"〜ずつ",reading:"〜ずつ",romaji:"zutsu",meaning:"每~(量)",category:"副詞"},
-  {id:563,kanji:"ストーブ",reading:"ストーブ",romaji:"sutōbu",meaning:"暖爐",category:"物品"},
-  {id:564,kanji:"スポーツ",reading:"スポーツ",romaji:"supōtsu",meaning:"運動",category:"物品"},
-  {id:565,kanji:"背",reading:"せ",romaji:"se",meaning:"身高",category:"身體方向"},
-  {id:566,kanji:"生活",reading:"せいかつ",romaji:"seikatsu",meaning:"生活",category:"物品"},
-  {id:567,kanji:"全然〜ない",reading:"ぜんぜん",romaji:"zenzen",meaning:"完全不~",category:"副詞"},
-  {id:568,kanji:"洗濯をする",reading:"せんたくをする",romaji:"sentaku wo suru",meaning:"洗衣服",category:"動詞"},
-  {id:569,kanji:"全部で",reading:"ぜんぶで",romaji:"zenbude",meaning:"一共",category:"副詞"},
-  {id:570,kanji:"掃除",reading:"そうじ",romaji:"sōji",meaning:"打掃",category:"物品"},
-  {id:571,kanji:"掃除をする",reading:"そうじをする",romaji:"souji wo suru",meaning:"打掃",category:"動詞"},
-  {id:572,kanji:"そこ",reading:"そこ",romaji:"soko",meaning:"那裡",category:"身體方向"},
-  {id:573,kanji:"そちら",reading:"そちら",romaji:"sochira",meaning:"您,那邊",category:"身體方向"},
-  {id:574,kanji:"そっち",reading:"そっち",romaji:"socchi",meaning:"那邊(口語)",category:"身體方向"},
-  {id:575,kanji:"その",reading:"その",romaji:"sono",meaning:"那個",category:"副詞"},
-  {id:576,kanji:"祖父",reading:"そふ",romaji:"sofu",meaning:"(自家)爺爺",category:"人物地點"},
-  {id:577,kanji:"祖母",reading:"そぼ",romaji:"sobo",meaning:"(自家)奶奶",category:"人物地點"},
-  {id:578,kanji:"それ",reading:"それ",romaji:"sore",meaning:"那個",category:"身體方向"},
-  {id:579,kanji:"それでは",reading:"それでは",romaji:"soredewa",meaning:"那麼",category:"副詞"},
-  {id:580,kanji:"大学1年生",reading:"だいがくいちねんせい",romaji:"daigaku ichinensei",meaning:"大學一年級",category:"人物地點"},
-  {id:581,kanji:"台湾",reading:"たいわん",romaji:"taiwan",meaning:"臺灣",category:"人物地點"},
-  {id:582,kanji:"〜だけ",reading:"〜だけ",romaji:"dake",meaning:"只有~",category:"副詞"},
-  {id:583,kanji:"〜たち",reading:"〜たち",romaji:"tachi",meaning:"~們",category:"人物地點"},
-  {id:584,kanji:"建物",reading:"たてもの",romaji:"tatemono",meaning:"建築物",category:"人物地點"},
-  {id:585,kanji:"棚",reading:"たな",romaji:"tana",meaning:"架子",category:"物品"},
-  {id:586,kanji:"楽しみ",reading:"たのしみ",romaji:"tanoshimi",meaning:"期待,樂趣",category:"物品"},
-  {id:587,kanji:"食べ物",reading:"たべもの",romaji:"tabemono",meaning:"食物",category:"物品"},
-  {id:588,kanji:"だめ",reading:"だめ",romaji:"dame",meaning:"不行",category:"形容詞"},
-  {id:589,kanji:"誰",reading:"だれ",romaji:"dare",meaning:"誰",category:"副詞"},
-  {id:590,kanji:"誰か",reading:"だれか",romaji:"dareka",meaning:"某人",category:"副詞"},
-  {id:591,kanji:"誰とも",reading:"だれとも",romaji:"dare to mo",meaning:"和誰都~",category:"副詞"},
-  {id:592,kanji:"誰にも",reading:"だれにも",romaji:"dare ni mo",meaning:"對誰都~",category:"副詞"},
-  {id:593,kanji:"誰も",reading:"だれも",romaji:"daremo",meaning:"誰都~",category:"副詞"},
-  {id:594,kanji:"誕生日",reading:"たんじょうび",romaji:"tanjōbi",meaning:"生日",category:"時間"},
-  {id:595,kanji:"ダンス",reading:"ダンス",romaji:"dansu",meaning:"舞蹈",category:"物品"},
-  {id:596,kanji:"チェックインする",reading:"チェックインする",romaji:"chekkuin suru",meaning:"辦理入住",category:"動詞"},
-  {id:597,kanji:"違う",reading:"ちがう",romaji:"chigau",meaning:"不對,錯了",category:"動詞"},
-  {id:598,kanji:"中国語",reading:"ちゅうごくご",romaji:"chūgokugo",meaning:"中文",category:"物品"},
-  {id:599,kanji:"中国人",reading:"ちゅうごくじん",romaji:"chūgokujin",meaning:"中國人",category:"人物地點"},
-  {id:600,kanji:"つける",reading:"つける",romaji:"tsukeru",meaning:"打開(電器)",category:"動詞"},
-  {id:601,kanji:"ディズニーランド",reading:"ディズニーランド",romaji:"dizunīrando",meaning:"迪士尼樂園",category:"人物地點"},
-  {id:602,kanji:"テーブル",reading:"テーブル",romaji:"tēburu",meaning:"桌子",category:"物品"},
-  {id:603,kanji:"テニス",reading:"テニス",romaji:"tenisu",meaning:"網球",category:"物品"},
-  {id:604,kanji:"では",reading:"では",romaji:"dewa",meaning:"那麼",category:"副詞"},
-  {id:605,kanji:"出る",reading:"でる",romaji:"deru",meaning:"(大學)畢業",category:"動詞"},
-  {id:606,kanji:"天気",reading:"てんき",romaji:"tenki",meaning:"天氣",category:"自然"},
-  {id:607,kanji:"天気の日",reading:"てんきのひ",romaji:"tenki no hi",meaning:"好天氣時",category:"自然"},
-  {id:608,kanji:"展覧会",reading:"てんらんかい",romaji:"tenrankai",meaning:"展覽會",category:"人物地點"},
-  {id:609,kanji:"土",reading:"ど",romaji:"do",meaning:"星期六",category:"時間"},
-  {id:610,kanji:"ドア",reading:"ドア",romaji:"doa",meaning:"門",category:"物品"},
-  {id:611,kanji:"どう",reading:"どう",romaji:"dō",meaning:"如何",category:"副詞"},
-  {id:612,kanji:"どうして",reading:"どうして",romaji:"dōshite",meaning:"為什麼",category:"副詞"},
-  {id:613,kanji:"どうやって",reading:"どうやって",romaji:"dōyatte",meaning:"如何做",category:"副詞"},
-  {id:614,kanji:"どこ",reading:"どこ",romaji:"doko",meaning:"哪裡",category:"身體方向"},
-  {id:615,kanji:"どこへも",reading:"どこへも",romaji:"doko e mo",meaning:"哪裡都~",category:"身體方向"},
-  {id:616,kanji:"どこか",reading:"どこか",romaji:"dokoka",meaning:"某處",category:"身體方向"},
-  {id:617,kanji:"ところ",reading:"ところ",romaji:"tokoro",meaning:"地方",category:"人物地點"},
-  {id:618,kanji:"どちら",reading:"どちら",romaji:"dochira",meaning:"哪邊,哪位",category:"身體方向"},
-  {id:619,kanji:"どっち",reading:"どっち",romaji:"docchi",meaning:"哪邊(口語)",category:"身體方向"},
-  {id:620,kanji:"どなた",reading:"どなた",romaji:"donata",meaning:"哪位(敬語)",category:"人物地點"},
-  {id:621,kanji:"どの〜",reading:"どの",romaji:"dono",meaning:"哪個~",category:"副詞"},
-  {id:622,kanji:"どのくらい",reading:"どのくらい",romaji:"dono kurai",meaning:"多少",category:"副詞"},
-  {id:623,kanji:"友だち",reading:"ともだち",romaji:"tomodachi",meaning:"朋友",category:"人物地點"},
-  {id:624,kanji:"どれ",reading:"どれ",romaji:"dore",meaning:"哪個",category:"身體方向"},
-  {id:625,kanji:"どれか",reading:"どれか",romaji:"doreka",meaning:"某個",category:"身體方向"},
-  {id:626,kanji:"どれくらい",reading:"どれくらい",romaji:"dorekurai",meaning:"多少",category:"副詞"},
-  {id:627,kanji:"どれでも",reading:"どれでも",romaji:"doredemo",meaning:"哪個都~",category:"身體方向"},
-  {id:628,kanji:"どんな",reading:"どんな",romaji:"donna",meaning:"什麼樣的",category:"副詞"},
-  {id:629,kanji:"(お金が)ない",reading:"ない",romaji:"nai",meaning:"沒有(錢)",category:"形容詞"},
-  {id:630,kanji:"なぜ",reading:"なぜ",romaji:"naze",meaning:"為什麼",category:"副詞"},
-  {id:631,kanji:"〜など",reading:"〜など",romaji:"nado",meaning:"~等",category:"副詞"},
-  {id:632,kanji:"何",reading:"なに",romaji:"nani",meaning:"什麼",category:"副詞"},
-  {id:633,kanji:"何か",reading:"なにか",romaji:"nanika",meaning:"某些東西",category:"副詞"},
-  {id:634,kanji:"何も",reading:"なにも",romaji:"nanimo",meaning:"什麼也~",category:"副詞"},
-  {id:635,kanji:"名前",reading:"なまえ",romaji:"namae",meaning:"名字",category:"物品"},
-  {id:636,kanji:"何時",reading:"なんじ",romaji:"nanji",meaning:"幾點",category:"時間"},
-  {id:637,kanji:"なんで",reading:"なんで",romaji:"nande",meaning:"如何做",category:"副詞"},
-  {id:638,kanji:"なんでも",reading:"なんでも",romaji:"nandemo",meaning:"不管什麼都~",category:"副詞"},
-  {id:639,kanji:"日本",reading:"にほん",romaji:"nihon",meaning:"日本",category:"人物地點"},
-  {id:640,kanji:"日本語",reading:"にほんご",romaji:"nihongo",meaning:"日語",category:"物品"},
-  {id:641,kanji:"日本語学校",reading:"にほんごがっこう",romaji:"nihongo gakkō",meaning:"日語學校",category:"人物地點"},
-  {id:642,kanji:"日本人",reading:"にほんじん",romaji:"nihonjin",meaning:"日本人",category:"人物地點"},
-  {id:643,kanji:"日本料理",reading:"にほんりょうり",romaji:"nihon ryōri",meaning:"日本料理",category:"物品"},
-  {id:644,kanji:"荷物",reading:"にもつ",romaji:"nimotsu",meaning:"行李",category:"物品"},
-  {id:645,kanji:"ニューヨーク",reading:"ニューヨーク",romaji:"nyūyōku",meaning:"紐約",category:"人物地點"},
-  {id:646,kanji:"庭",reading:"にわ",romaji:"niwa",meaning:"院子",category:"人物地點"},
-  {id:647,kanji:"飲み物",reading:"のみもの",romaji:"nomimono",meaning:"飲料",category:"物品"},
-  {id:648,kanji:"パーティー",reading:"パーティー",romaji:"pātī",meaning:"派對",category:"物品"},
-  {id:649,kanji:"はい",reading:"はい",romaji:"hai",meaning:"是,好",category:"副詞"},
-  {id:650,kanji:"バイト",reading:"バイト",romaji:"baito",meaning:"打工(口語)",category:"物品"},
-  {id:651,kanji:"箱",reading:"はこ",romaji:"hako",meaning:"盒子",category:"物品"},
-  {id:652,kanji:"初めに",reading:"はじめに",romaji:"hajime ni",meaning:"首先",category:"副詞"},
-  {id:653,kanji:"場所",reading:"ばしょ",romaji:"basho",meaning:"地方",category:"人物地點"},
-  {id:654,kanji:"パスタ",reading:"パスタ",romaji:"pasuta",meaning:"義大利麵",category:"物品"},
-  {id:655,kanji:"話",reading:"はなし",romaji:"hanashi",meaning:"話,故事",category:"物品"},
-  {id:656,kanji:"半",reading:"はん",romaji:"han",meaning:"半(30分)",category:"時間"},
-  {id:657,kanji:"晩ご飯",reading:"ばんごはん",romaji:"bangohan",meaning:"晚餐",category:"物品"},
-  {id:658,kanji:"パンダ",reading:"パンダ",romaji:"panda",meaning:"熊貓",category:"自然"},
-  {id:659,kanji:"左側",reading:"ひだりがわ",romaji:"hidarigawa",meaning:"左側",category:"身體方向"},
-  {id:660,kanji:"ビル",reading:"ビル",romaji:"biru",meaning:"大樓",category:"人物地點"},
-  {id:661,kanji:"昼ご飯",reading:"ひるごはん",romaji:"hirugohan",meaning:"午餐",category:"物品"},
-  {id:662,kanji:"プール",reading:"プール",romaji:"pūru",meaning:"游泳池",category:"人物地點"},
-  {id:663,kanji:"袋",reading:"ふくろ",romaji:"fukuro",meaning:"袋子",category:"物品"},
-  {id:664,kanji:"富士山",reading:"ふじさん",romaji:"fujisan",meaning:"富士山",category:"人物地點"},
-  {id:665,kanji:"北京",reading:"ぺきん",romaji:"pekin",meaning:"北京",category:"人物地點"},
-  {id:666,kanji:"ベトナム",reading:"ベトナム",romaji:"betonamu",meaning:"越南",category:"人物地點"},
-  {id:667,kanji:"勉強",reading:"べんきょう",romaji:"benkyō",meaning:"學習",category:"物品"},
-  {id:668,kanji:"勉強をする",reading:"べんきょうをする",romaji:"benkyou wo suru",meaning:"讀書",category:"動詞"},
-  {id:669,kanji:"帽子",reading:"ぼうし",romaji:"bōshi",meaning:"帽子",category:"物品"},
-  {id:670,kanji:"他",reading:"ほか",romaji:"hoka",meaning:"其他",category:"副詞"},
-  {id:671,kanji:"他の人",reading:"ほかのひと",romaji:"hoka no hito",meaning:"其他人",category:"人物地點"},
-  {id:672,kanji:"僕",reading:"ぼく",romaji:"boku",meaning:"我(男性用語)",category:"人物地點"},
-  {id:673,kanji:"ホテル",reading:"ホテル",romaji:"hoteru",meaning:"飯店",category:"人物地點"},
-  {id:674,kanji:"本当",reading:"ほんとう",romaji:"hontō",meaning:"真的",category:"副詞"},
-  {id:675,kanji:"本当に",reading:"ほんとうに",romaji:"hontō ni",meaning:"真的,實在",category:"副詞"},
-  {id:676,kanji:"〜前",reading:"〜まえ",romaji:"mae",meaning:"~之前",category:"時間"},
-  {id:677,kanji:"町",reading:"まち",romaji:"machi",meaning:"城鎮",category:"人物地點"},
-  {id:678,kanji:"〜まで",reading:"〜まで",romaji:"made",meaning:"到~為止",category:"副詞"},
-  {id:679,kanji:"マレーシア",reading:"マレーシア",romaji:"marēshia",meaning:"馬來西亞",category:"人物地點"},
-  {id:680,kanji:"右側",reading:"みぎがわ",romaji:"migigawa",meaning:"右側",category:"身體方向"},
-  {id:681,kanji:"店",reading:"みせ",romaji:"mise",meaning:"商店",category:"人物地點"},
-  {id:682,kanji:"見せる",reading:"みせる",romaji:"miseru",meaning:"給人看",category:"動詞"},
-  {id:683,kanji:"道",reading:"みち",romaji:"michi",meaning:"道路",category:"人物地點"},
-  {id:684,kanji:"皆さん",reading:"みなさん",romaji:"minasan",meaning:"大家",category:"人物地點"},
-  {id:685,kanji:"みんな",reading:"みんな",romaji:"minna",meaning:"大家",category:"人物地點"},
-  {id:686,kanji:"もう一度",reading:"もういちど",romaji:"mō ichido",meaning:"再一次",category:"副詞"},
-  {id:687,kanji:"もう少し",reading:"もうすこし",romaji:"mō sukoshi",meaning:"再一點",category:"副詞"},
-  {id:688,kanji:"もしもし",reading:"もしもし",romaji:"moshimoshi",meaning:"喂(電話)",category:"副詞"},
-  {id:689,kanji:"持っていく",reading:"もっていく",romaji:"motte iku",meaning:"拿去",category:"動詞"},
-  {id:690,kanji:"持ってくる",reading:"もってくる",romaji:"motte kuru",meaning:"拿來",category:"動詞"},
-  {id:691,kanji:"物",reading:"もの",romaji:"mono",meaning:"東西",category:"物品"},
-  {id:692,kanji:"野球",reading:"やきゅう",romaji:"yakyū",meaning:"棒球",category:"物品"},
-  {id:693,kanji:"洋服",reading:"ようふく",romaji:"yōfuku",meaning:"衣服",category:"物品"},
-  {id:694,kanji:"予定",reading:"よてい",romaji:"yotei",meaning:"計畫",category:"物品"},
-  {id:695,kanji:"寮",reading:"りょう",romaji:"ryō",meaning:"宿舍",category:"人物地點"},
-  {id:696,kanji:"料理",reading:"りょうり",romaji:"ryōri",meaning:"料理",category:"物品"},
-  {id:697,kanji:"料理をする",reading:"りょうりをする",romaji:"ryouri wo suru",meaning:"做菜",category:"動詞"},
-  {id:698,kanji:"旅行",reading:"りょこう",romaji:"ryokō",meaning:"旅行",category:"物品"},
-  {id:699,kanji:"旅行をする",reading:"りょこうをする",romaji:"ryokou wo suru",meaning:"去旅行",category:"動詞"},
-  {id:700,kanji:"冷蔵庫",reading:"れいぞうこ",romaji:"reizōko",meaning:"冰箱",category:"物品"},
-  {id:701,kanji:"レジ",reading:"レジ",romaji:"reji",meaning:"收銀處",category:"人物地點"},
-  {id:702,kanji:"練習をする",reading:"れんしゅうをする",romaji:"renshuu wo suru",meaning:"練習",category:"動詞"},
-  {id:703,kanji:"ロビー",reading:"ロビー",romaji:"robī",meaning:"大廳",category:"人物地點"},
-  {id:704,kanji:"ワイン",reading:"ワイン",romaji:"wain",meaning:"葡萄酒",category:"物品"},
-  {id:705,kanji:"私",reading:"わたし",romaji:"watashi",meaning:"我",category:"人物地點"},
 ];
 
 const STORAGE_KEY = "n5-vocab-progress-v2";
@@ -932,9 +692,53 @@ const saveIndicator = document.getElementById("saveIndicator");
 const gridView = document.getElementById("gridView");
 const flashView = document.getElementById("flashView");
 
+const CHECK_ICON = '<svg class="dd-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+
+function buildDropdown(prefix, options) {
+  const dd = document.getElementById(prefix + "DD");
+  const panel = document.getElementById(prefix + "DDPanel");
+  const label = document.getElementById(prefix + "DDLabel");
+  const nativeSelect = document.getElementById(
+    prefix === "category" ? "categoryFilter" : "statusFilter"
+  );
+  const currentVal = nativeSelect.value || options[0].value;
+
+  panel.innerHTML = options.map(o =>
+    `<div class="dd-opt${o.value === currentVal ? " selected" : ""}" data-value="${o.value}">${CHECK_ICON}<span>${o.label}</span></div>`
+  ).join("");
+  const selected = options.find(o => o.value === currentVal) || options[0];
+  label.textContent = selected.label;
+
+  panel.querySelectorAll(".dd-opt").forEach(opt => {
+    opt.addEventListener("click", () => {
+      const val = opt.dataset.value;
+      nativeSelect.value = val;
+      panel.querySelectorAll(".dd-opt").forEach(o => o.classList.remove("selected"));
+      opt.classList.add("selected");
+      label.textContent = opt.textContent.trim();
+      dd.classList.remove("open");
+      nativeSelect.dispatchEvent(new Event("change"));
+    });
+  });
+}
+
+document.querySelectorAll(".dd-btn").forEach(btn => {
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const dd = btn.closest(".dd");
+    const wasOpen = dd.classList.contains("open");
+    document.querySelectorAll(".dd.open").forEach(d => d.classList.remove("open"));
+    if (!wasOpen) dd.classList.add("open");
+  });
+});
+document.addEventListener("click", () => {
+  document.querySelectorAll(".dd.open").forEach(d => d.classList.remove("open"));
+});
+
 function buildCategoryOptions() {
   const cats = ["全部", ...new Set(VOCAB.map(v => v.category))];
   categoryFilter.innerHTML = cats.map(c => `<option value="${c}">${c === "全部" ? "全部分類" : c}</option>`).join("");
+  buildDropdown("category", cats.map(c => ({ value: c, label: c === "全部" ? "全部分類" : c })));
 }
 
 function loadProgress() {
@@ -1168,6 +972,12 @@ function renderGrid() {
 
 (function init() {
   buildCategoryOptions();
+  buildDropdown("status", [
+    { value: "all", label: "全部狀態" },
+    { value: "new", label: "未學習" },
+    { value: "review", label: "需加強" },
+    { value: "known", label: "已熟悉" }
+  ]);
   loadProgress();
   applyFilters();
   saveSummary();
