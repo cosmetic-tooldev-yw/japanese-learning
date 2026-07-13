@@ -82,12 +82,40 @@
   .progress-review { background: #C17A4D; height: 100%; transition: width 0.3s; }
 
   .filters { display: flex; gap: 8px; margin-top: 14px; }
-  select {
-    flex: 1; background: rgba(255,255,255,0.08); color: #fff; border: none;
-    border-radius: 12px; padding: 10px 8px; font-size: 13px; text-align: center;
-    appearance: none; -webkit-appearance: none;
+  select { display: none; }
+  .dd { position: relative; flex: 1; }
+  .dd-btn {
+    width: 100%; background: rgba(255,255,255,0.08); color: #e4e4e7;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 12px; padding: 10px 12px; font-size: 13px; text-align: center;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    font-family: inherit;
   }
-  select option { color: #000; background: #fff; }
+  .dd-btn .dd-chevron { width: 12px; height: 12px; flex-shrink: 0; transition: transform 0.2s; opacity: 0.6; }
+  .dd.open .dd-btn .dd-chevron { transform: rotate(180deg); }
+  .dd-panel {
+    position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 40;
+    background: #232325; border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px; padding: 6px;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.45);
+    max-height: 280px; overflow-y: auto;
+    display: none;
+  }
+  .dd.open .dd-panel { display: block; }
+  .dd-opt {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    position: relative;
+    padding: 10px 10px; border-radius: 9px; font-size: 14px; color: #e4e4e7;
+  }
+  .dd-opt:hover { background: rgba(255,255,255,0.1); }
+  .dd-opt:active { background: rgba(255,255,255,0.16); }
+  .dd-opt.selected { color: #fff; font-weight: 600; }
+  .dd-opt .dd-check {
+    position: absolute; left: 10px; width: 14px; height: 14px; opacity: 0;
+    color: #C17A4D;
+  }
+  .dd-opt.selected .dd-check { opacity: 1; }
+
 
   .card-area {
     flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -204,11 +232,25 @@
   </div>
 
   <div class="filters">
+    <div class="dd" id="scriptDD">
+      <button type="button" class="dd-btn" id="scriptDDBtn">
+        <span id="scriptDDLabel">平假名+片假名</span>
+        <svg class="dd-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+      <div class="dd-panel" id="scriptDDPanel"></div>
+    </div>
     <select id="scriptFilter">
       <option value="all">平假名+片假名</option>
       <option value="hiragana">平假名</option>
       <option value="katakana">片假名</option>
     </select>
+    <div class="dd" id="groupDD">
+      <button type="button" class="dd-btn" id="groupDDBtn">
+        <span id="groupDDLabel">全部類型</span>
+        <svg class="dd-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+      <div class="dd-panel" id="groupDDPanel"></div>
+    </div>
     <select id="groupFilter">
       <option value="all">全部類型</option>
       <option value="seion">清音</option>
@@ -219,6 +261,13 @@
 
   <div id="flashView">
     <div class="filters" style="margin-top:8px;">
+      <div class="dd" id="statusDD">
+        <button type="button" class="dd-btn" id="statusDDBtn">
+          <span id="statusDDLabel">全部狀態</span>
+          <svg class="dd-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <div class="dd-panel" id="statusDDPanel"></div>
+      </div>
       <select id="statusFilter">
         <option value="all">全部狀態</option>
         <option value="new">未學習</option>
@@ -228,6 +277,7 @@
     </div>
 
     <div class="card-area" id="cardArea"></div>
+
 
     <div class="nav-row">
       <button class="nav-btn" id="prevBtn">‹</button>
@@ -349,6 +399,48 @@ const statusFilter = document.getElementById("statusFilter");
 const saveIndicator = document.getElementById("saveIndicator");
 const gridView = document.getElementById("gridView");
 const flashView = document.getElementById("flashView");
+
+const CHECK_ICON = '<svg class="dd-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+const DD_NATIVE = { script: scriptFilter, group: groupFilter, status: statusFilter };
+
+function buildDropdown(prefix, options) {
+  const dd = document.getElementById(prefix + "DD");
+  const panel = document.getElementById(prefix + "DDPanel");
+  const label = document.getElementById(prefix + "DDLabel");
+  const nativeSelect = DD_NATIVE[prefix];
+  const currentVal = nativeSelect.value || options[0].value;
+
+  panel.innerHTML = options.map(o =>
+    `<div class="dd-opt${o.value === currentVal ? " selected" : ""}" data-value="${o.value}">${CHECK_ICON}<span>${o.label}</span></div>`
+  ).join("");
+  const selected = options.find(o => o.value === currentVal) || options[0];
+  label.textContent = selected.label;
+
+  panel.querySelectorAll(".dd-opt").forEach(opt => {
+    opt.addEventListener("click", () => {
+      const val = opt.dataset.value;
+      nativeSelect.value = val;
+      panel.querySelectorAll(".dd-opt").forEach(o => o.classList.remove("selected"));
+      opt.classList.add("selected");
+      label.textContent = opt.textContent.trim();
+      dd.classList.remove("open");
+      nativeSelect.dispatchEvent(new Event("change"));
+    });
+  });
+}
+
+document.querySelectorAll(".dd-btn").forEach(btn => {
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const dd = btn.closest(".dd");
+    const wasOpen = dd.classList.contains("open");
+    document.querySelectorAll(".dd.open").forEach(d => d.classList.remove("open"));
+    if (!wasOpen) dd.classList.add("open");
+  });
+});
+document.addEventListener("click", () => {
+  document.querySelectorAll(".dd.open").forEach(d => d.classList.remove("open"));
+});
 
 function loadProgress() {
   try {
@@ -582,6 +674,23 @@ function renderGrid() {
 }
 
 (function init() {
+  buildDropdown("script", [
+    { value: "all", label: "平假名+片假名" },
+    { value: "hiragana", label: "平假名" },
+    { value: "katakana", label: "片假名" }
+  ]);
+  buildDropdown("group", [
+    { value: "all", label: "全部類型" },
+    { value: "seion", label: "清音" },
+    { value: "dakuten", label: "濁音/半濁音" },
+    { value: "youon", label: "拗音" }
+  ]);
+  buildDropdown("status", [
+    { value: "all", label: "全部狀態" },
+    { value: "new", label: "未學習" },
+    { value: "review", label: "需加強" },
+    { value: "known", label: "已熟悉" }
+  ]);
   loadProgress();
   applyFilters();
   saveSummary();
