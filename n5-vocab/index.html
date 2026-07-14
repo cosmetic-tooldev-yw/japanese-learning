@@ -173,40 +173,35 @@
   .grid-cell.empty { background: transparent; }
   .grid-cell .dot { position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; border-radius: 50%; }
 
-  .grid-cell.expanded {
-    grid-column: 1 / -1;
-    aspect-ratio: auto;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 12px;
-    padding: 14px 16px;
-    background: rgba(255,255,255,0.09);
-    text-align: left;
-    cursor: default;
-  }
-  .grid-cell.expanded .exp-main { flex: 1; display: flex; flex-direction: column; gap: 2px; align-items: flex-start; text-align: left; }
-  .grid-cell.expanded .k { font-size: 20px; margin: 0; }
-  .grid-cell.expanded .r { font-size: 13px; margin: 0; }
-  .grid-cell.expanded .romaji-line { font-size: 11px; color: #767679; }
-  .grid-cell.expanded .m { font-size: 13px; color: #e4e4e7; margin-top: 2px; }
-  .grid-cell.expanded .dot { position: static; width: 8px; height: 8px; flex-shrink: 0; }
-  .grid-cell .exp-actions { display: none; }
-  .grid-cell.expanded .exp-actions { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
-  .exp-sound-btn {
-    width: 34px; height: 34px; border-radius: 50%;
-    background: rgba(255,255,255,0.1); border: none;
+  .word-modal-overlay {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
     display: flex; align-items: center; justify-content: center;
-    color: #fff; font-size: 14px;
+    padding: 24px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s;
   }
-  .exp-sound-btn:active { background: rgba(255,255,255,0.2); }
-  .exp-status-row { display: flex; gap: 6px; }
-  .exp-status-btn {
-    font-size: 11px; padding: 6px 8px; border-radius: 8px; border: none; color: #fff;
-    background: rgba(255,255,255,0.08); white-space: nowrap;
+  .word-modal-overlay.open { opacity: 1; pointer-events: auto; }
+  .word-modal-card {
+    width: 100%; max-width: 340px;
+    background: linear-gradient(145deg, #f6efe0, #efe4cf); color: #2b2b2d;
+    border-radius: 24px; padding: 28px 24px;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.45);
+    position: relative;
+    transform: scale(0.92); transition: transform 0.2s;
+    display: flex; flex-direction: column; align-items: center; text-align: center;
   }
-  .exp-status-btn.active-known { background: #8FA876; color: #1c1c1e; font-weight: 600; }
-  .exp-status-btn.active-review { background: #C17A4D; color: #1c1c1e; font-weight: 600; }
+  .word-modal-overlay.open .word-modal-card { transform: scale(1); }
+  .word-modal-card .tag { position: absolute; top: 14px; left: 14px; background: rgba(43,43,45,0.08); color: #2b2b2d; }
+  .word-modal-card .status-dot { position: absolute; top: 18px; right: 18px; }
+  .word-modal-card .word-main { font-size: 32px; font-weight: 700; margin-top: 12px; }
+  .word-modal-card .reading { font-size: 19px; margin-top: 10px; }
+  .word-modal-card .romaji { font-size: 13px; margin-bottom: 8px; }
+  .word-modal-card .meaning { font-size: 21px; margin-top: 4px; }
+  .word-modal-card .sound-btn { position: static; margin-top: 16px; }
+  .word-modal-card .actions { margin-top: 20px; }
 </style>
 </head>
 <body>
@@ -277,6 +272,10 @@
   </div>
 
   <div id="gridView" class="grid-view" style="display:none;"></div>
+</div>
+
+<div class="word-modal-overlay" id="wordModalOverlay">
+  <div class="word-modal-card" id="wordModalCard"></div>
 </div>
 <div class="save-indicator" id="saveIndicator">已儲存</div>
 <script>
@@ -516,13 +515,13 @@ document.getElementById("shuffleBtn").addEventListener("click", e => {
   e.target.classList.toggle("active", shuffleMode);
   applyFilters();
 });
-categoryFilter.addEventListener("change", () => { expandedId = null; applyFilters(); if (currentView==="grid") renderGrid(); });
+categoryFilter.addEventListener("change", () => { closeWordModal(); applyFilters(); if (currentView==="grid") renderGrid(); });
 statusFilter.addEventListener("change", applyFilters);
 document.getElementById("resetBtn").addEventListener("click", () => {
   if (confirm("確定要清除單字卡學習進度嗎?這個動作無法復原。")) {
     progress = {};
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(progress)); } catch(e) {}
-    expandedId = null;
+    closeWordModal();
     updateStats();
     applyFilters();
     if (currentView==="grid") renderGrid();
@@ -535,6 +534,7 @@ document.querySelectorAll(".mode-tab").forEach(btn => {
     document.querySelectorAll(".mode-tab").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
     currentView = btn.dataset.mode;
+    closeWordModal();
     if (currentView === "flash") {
       flashView.style.display = "";
       gridView.style.display = "none";
@@ -547,7 +547,8 @@ document.querySelectorAll(".mode-tab").forEach(btn => {
   });
 });
 
-let expandedId = null;
+const wordModalOverlay = document.getElementById("wordModalOverlay");
+const wordModalCard = document.getElementById("wordModalCard");
 
 function renderGrid() {
   const relevant = VOCAB.filter(matchesFilters);
@@ -566,65 +567,68 @@ function renderGrid() {
     html += `<div class="grid-group"><div class="grid-group-title">${key}</div><div class="grid-cells">`;
     groups[key].forEach(v => {
       const s = progress[v.id] || "new";
-      const isExpanded = v.id === expandedId;
-      html += renderGridCell(v, s, isExpanded);
+      html += `<button class="grid-cell" data-id="${v.id}">
+        <span class="dot" style="background:${statusColor(s)}"></span>
+        <span class="k">${v.kanji}</span>
+        <span class="m">${v.meaning}</span>
+      </button>`;
     });
     html += `</div></div>`;
   });
   gridView.innerHTML = html;
-  wireGridCells();
-}
-
-function renderGridCell(v, s, isExpanded) {
-  if (!isExpanded) {
-    return `<button class="grid-cell" data-id="${v.id}">
-      <span class="dot" style="background:${statusColor(s)}"></span>
-      <span class="k">${v.kanji}</span>
-      <span class="m">${v.meaning}</span>
-    </button>`;
-  }
-  const kana = v.reading || v.kanji;
-  return `<button class="grid-cell expanded" data-id="${v.id}">
-    <span class="dot" style="background:${statusColor(s)}"></span>
-    <span class="exp-main">
-      <span class="k">${v.kanji}</span>
-      ${v.reading && v.reading !== v.kanji ? `<span class="r">${v.reading}</span>` : ""}
-      <span class="romaji-line">${v.romaji || ""}</span>
-      <span class="m">${v.meaning}</span>
-    </span>
-    <span class="exp-actions">
-      <button type="button" class="exp-sound-btn" data-action="sound" data-kana="${kana}">${SOUND_ICON}</button>
-      <span class="exp-status-row">
-        <button type="button" class="exp-status-btn${s === "review" ? " active-review" : ""}" data-action="review" data-id="${v.id}">需加強</button>
-        <button type="button" class="exp-status-btn${s === "known" ? " active-known" : ""}" data-action="known" data-id="${v.id}">已熟悉</button>
-      </span>
-    </span>
-  </button>`;
-}
-
-function wireGridCells() {
   gridView.querySelectorAll(".grid-cell").forEach(cell => {
-    cell.addEventListener("click", (e) => {
-      const action = e.target.closest("[data-action]");
-      if (action) {
-        e.stopPropagation();
-        const act = action.dataset.action;
-        if (act === "sound") {
-          speak(action.dataset.kana);
-        } else if (act === "known" || act === "review") {
-          const id = Number(action.dataset.id);
-          progress[id] = act;
-          saveProgress();
-          renderGrid();
-        }
-        return;
-      }
-      const id = Number(cell.dataset.id);
-      expandedId = expandedId === id ? null : id;
-      renderGrid();
-    });
+    cell.addEventListener("click", () => openWordModal(Number(cell.dataset.id)));
   });
 }
+
+function openWordModal(id) {
+  const v = VOCAB.find(x => x.id === id);
+  if (!v) return;
+  const s = progress[v.id] || "new";
+  const kana = v.reading || v.kanji;
+  wordModalCard.innerHTML = `
+    <span class="tag">${v.category}</span>
+    <span class="status-dot" style="background:${statusColor(s)}"></span>
+    <div class="word-main">${v.kanji}</div>
+    ${v.reading && v.reading !== v.kanji ? `<div class="reading">${v.reading}</div>` : ""}
+    <div class="romaji">${v.romaji || ""}</div>
+    <div class="meaning">${v.meaning}</div>
+    <button type="button" class="sound-btn" id="modalSoundBtn">${SOUND_ICON}</button>
+    <div class="actions">
+      <button type="button" class="btn-review" id="modalReviewBtn">需加強</button>
+      <button type="button" class="btn-known" id="modalKnownBtn">已熟悉</button>
+    </div>`;
+  document.getElementById("modalSoundBtn").addEventListener("click", (e) => {
+    e.stopPropagation();
+    speak(kana);
+  });
+  document.getElementById("modalReviewBtn").addEventListener("click", (e) => {
+    e.stopPropagation();
+    progress[v.id] = "review";
+    saveProgress();
+    renderGrid();
+    closeWordModal();
+  });
+  document.getElementById("modalKnownBtn").addEventListener("click", (e) => {
+    e.stopPropagation();
+    progress[v.id] = "known";
+    saveProgress();
+    renderGrid();
+    closeWordModal();
+  });
+  wordModalOverlay.classList.add("open");
+}
+
+function closeWordModal() {
+  wordModalOverlay.classList.remove("open");
+}
+
+wordModalOverlay.addEventListener("click", (e) => {
+  if (e.target === wordModalOverlay) closeWordModal();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeWordModal();
+});
 
 (async function init() {
   cardArea.innerHTML = `<div class="empty-state">載入中...</div>`;
