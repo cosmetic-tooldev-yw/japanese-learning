@@ -164,6 +164,7 @@
     aspect-ratio: 1; background: rgba(255,255,255,0.06); border-radius: 14px;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     border: none; color: #fff; position: relative; padding: 4px;
+    transition: background 0.15s;
   }
   .grid-cell:active { background: rgba(255,255,255,0.12); }
   .grid-cell .k { font-size: 18px; font-weight: 600; text-align: center; }
@@ -171,6 +172,41 @@
   .grid-cell .m { font-size: 10px; color: #d0d0d5; margin-top: 2px; text-align: center; }
   .grid-cell.empty { background: transparent; }
   .grid-cell .dot { position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; border-radius: 50%; }
+
+  .grid-cell.expanded {
+    grid-column: 1 / -1;
+    aspect-ratio: auto;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    background: rgba(255,255,255,0.09);
+    text-align: left;
+    cursor: default;
+  }
+  .grid-cell.expanded .exp-main { flex: 1; display: flex; flex-direction: column; gap: 2px; align-items: flex-start; text-align: left; }
+  .grid-cell.expanded .k { font-size: 20px; margin: 0; }
+  .grid-cell.expanded .r { font-size: 13px; margin: 0; }
+  .grid-cell.expanded .romaji-line { font-size: 11px; color: #767679; }
+  .grid-cell.expanded .m { font-size: 13px; color: #e4e4e7; margin-top: 2px; }
+  .grid-cell.expanded .dot { position: static; width: 8px; height: 8px; flex-shrink: 0; }
+  .grid-cell .exp-actions { display: none; }
+  .grid-cell.expanded .exp-actions { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+  .exp-sound-btn {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: rgba(255,255,255,0.1); border: none;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 14px;
+  }
+  .exp-sound-btn:active { background: rgba(255,255,255,0.2); }
+  .exp-status-row { display: flex; gap: 6px; }
+  .exp-status-btn {
+    font-size: 11px; padding: 6px 8px; border-radius: 8px; border: none; color: #fff;
+    background: rgba(255,255,255,0.08); white-space: nowrap;
+  }
+  .exp-status-btn.active-known { background: #8FA876; color: #1c1c1e; font-weight: 600; }
+  .exp-status-btn.active-review { background: #C17A4D; color: #1c1c1e; font-weight: 600; }
 </style>
 </head>
 <body>
@@ -480,12 +516,13 @@ document.getElementById("shuffleBtn").addEventListener("click", e => {
   e.target.classList.toggle("active", shuffleMode);
   applyFilters();
 });
-categoryFilter.addEventListener("change", () => { applyFilters(); if (currentView==="grid") renderGrid(); });
+categoryFilter.addEventListener("change", () => { expandedId = null; applyFilters(); if (currentView==="grid") renderGrid(); });
 statusFilter.addEventListener("change", applyFilters);
 document.getElementById("resetBtn").addEventListener("click", () => {
   if (confirm("確定要清除單字卡學習進度嗎?這個動作無法復原。")) {
     progress = {};
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(progress)); } catch(e) {}
+    expandedId = null;
     updateStats();
     applyFilters();
     if (currentView==="grid") renderGrid();
@@ -510,6 +547,8 @@ document.querySelectorAll(".mode-tab").forEach(btn => {
   });
 });
 
+let expandedId = null;
+
 function renderGrid() {
   const relevant = VOCAB.filter(matchesFilters);
   updateStats();
@@ -527,17 +566,63 @@ function renderGrid() {
     html += `<div class="grid-group"><div class="grid-group-title">${key}</div><div class="grid-cells">`;
     groups[key].forEach(v => {
       const s = progress[v.id] || "new";
-      html += `<button class="grid-cell" data-id="${v.id}" data-kana="${v.reading || v.kanji}">
-        <span class="dot" style="background:${statusColor(s)}"></span>
-        <span class="k">${v.kanji}</span>
-        <span class="m">${v.meaning}</span>
-      </button>`;
+      const isExpanded = v.id === expandedId;
+      html += renderGridCell(v, s, isExpanded);
     });
     html += `</div></div>`;
   });
   gridView.innerHTML = html;
+  wireGridCells();
+}
+
+function renderGridCell(v, s, isExpanded) {
+  if (!isExpanded) {
+    return `<button class="grid-cell" data-id="${v.id}">
+      <span class="dot" style="background:${statusColor(s)}"></span>
+      <span class="k">${v.kanji}</span>
+      <span class="m">${v.meaning}</span>
+    </button>`;
+  }
+  const kana = v.reading || v.kanji;
+  return `<button class="grid-cell expanded" data-id="${v.id}">
+    <span class="dot" style="background:${statusColor(s)}"></span>
+    <span class="exp-main">
+      <span class="k">${v.kanji}</span>
+      ${v.reading && v.reading !== v.kanji ? `<span class="r">${v.reading}</span>` : ""}
+      <span class="romaji-line">${v.romaji || ""}</span>
+      <span class="m">${v.meaning}</span>
+    </span>
+    <span class="exp-actions">
+      <button type="button" class="exp-sound-btn" data-action="sound" data-kana="${kana}">${SOUND_ICON}</button>
+      <span class="exp-status-row">
+        <button type="button" class="exp-status-btn${s === "review" ? " active-review" : ""}" data-action="review" data-id="${v.id}">需加強</button>
+        <button type="button" class="exp-status-btn${s === "known" ? " active-known" : ""}" data-action="known" data-id="${v.id}">已熟悉</button>
+      </span>
+    </span>
+  </button>`;
+}
+
+function wireGridCells() {
   gridView.querySelectorAll(".grid-cell").forEach(cell => {
-    cell.addEventListener("click", () => speak(cell.dataset.kana));
+    cell.addEventListener("click", (e) => {
+      const action = e.target.closest("[data-action]");
+      if (action) {
+        e.stopPropagation();
+        const act = action.dataset.action;
+        if (act === "sound") {
+          speak(action.dataset.kana);
+        } else if (act === "known" || act === "review") {
+          const id = Number(action.dataset.id);
+          progress[id] = act;
+          saveProgress();
+          renderGrid();
+        }
+        return;
+      }
+      const id = Number(cell.dataset.id);
+      expandedId = expandedId === id ? null : id;
+      renderGrid();
+    });
   });
 }
 
