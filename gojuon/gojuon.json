@@ -4,322 +4,512 @@
     "kana": "あ",
     "romaji": "a",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "お",
+      "め",
+      "ぬ"
+    ]
   },
   {
     "id": 2,
     "kana": "い",
     "romaji": "i",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "り",
+      "こ"
+    ]
   },
   {
     "id": 3,
     "kana": "う",
     "romaji": "u",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "ら",
+      "つ"
+    ]
   },
   {
     "id": 4,
     "kana": "え",
     "romaji": "e",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "ん",
+      "い"
+    ]
   },
   {
     "id": 5,
     "kana": "お",
     "romaji": "o",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "あ",
+      "め",
+      "ぬ"
+    ]
   },
   {
     "id": 6,
     "kana": "か",
     "romaji": "ka",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "き",
+      "さ"
+    ]
   },
   {
     "id": 7,
     "kana": "き",
     "romaji": "ki",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "さ",
+      "ち"
+    ]
   },
   {
     "id": 8,
     "kana": "く",
     "romaji": "ku",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "へ",
+      "し"
+    ]
   },
   {
     "id": 9,
     "kana": "け",
     "romaji": "ke",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "せ",
+      "め"
+    ]
   },
   {
     "id": 10,
     "kana": "こ",
     "romaji": "ko",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "に",
+      "い"
+    ]
   },
   {
     "id": 11,
     "kana": "さ",
     "romaji": "sa",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "き",
+      "ち"
+    ]
   },
   {
     "id": 12,
     "kana": "し",
     "romaji": "shi",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "つ",
+      "く"
+    ]
   },
   {
     "id": 13,
     "kana": "す",
     "romaji": "su",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "む",
+      "ま"
+    ]
   },
   {
     "id": 14,
     "kana": "せ",
     "romaji": "se",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "け",
+      "て"
+    ]
   },
   {
     "id": 15,
     "kana": "そ",
     "romaji": "so",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "ろ",
+      "り"
+    ]
   },
   {
     "id": 16,
     "kana": "た",
     "romaji": "ta",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "な",
+      "に"
+    ]
   },
   {
     "id": 17,
     "kana": "ち",
     "romaji": "chi",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "さ",
+      "き"
+    ]
   },
   {
     "id": 18,
     "kana": "つ",
     "romaji": "tsu",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "し",
+      "う"
+    ]
   },
   {
     "id": 19,
     "kana": "て",
     "romaji": "te",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "せ",
+      "ね"
+    ]
   },
   {
     "id": 20,
     "kana": "と",
     "romaji": "to",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "て",
+      "こ"
+    ]
   },
   {
     "id": 21,
     "kana": "な",
     "romaji": "na",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "た",
+      "に"
+    ]
   },
   {
     "id": 22,
     "kana": "に",
     "romaji": "ni",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "こ",
+      "け"
+    ]
   },
   {
     "id": 23,
     "kana": "ぬ",
     "romaji": "nu",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "め",
+      "ね",
+      "れ"
+    ]
   },
   {
     "id": 24,
     "kana": "ね",
     "romaji": "ne",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "れ",
+      "わ",
+      "ぬ"
+    ]
   },
   {
     "id": 25,
     "kana": "の",
     "romaji": "no",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "こ",
+      "そ"
+    ]
   },
   {
     "id": 26,
     "kana": "は",
     "romaji": "ha",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "ほ",
+      "ま",
+      "け"
+    ]
   },
   {
     "id": 27,
     "kana": "ひ",
     "romaji": "hi",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "み",
+      "に"
+    ]
   },
   {
     "id": 28,
     "kana": "ふ",
     "romaji": "fu",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "う",
+      "む"
+    ]
   },
   {
     "id": 29,
     "kana": "へ",
     "romaji": "he",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "く",
+      "れ"
+    ]
   },
   {
     "id": 30,
     "kana": "ほ",
     "romaji": "ho",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "は",
+      "ま"
+    ]
   },
   {
     "id": 31,
     "kana": "ま",
     "romaji": "ma",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "ほ",
+      "は"
+    ]
   },
   {
     "id": 32,
     "kana": "み",
     "romaji": "mi",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "ひ",
+      "に"
+    ]
   },
   {
     "id": 33,
     "kana": "む",
     "romaji": "mu",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "す",
+      "ぬ"
+    ]
   },
   {
     "id": 34,
     "kana": "め",
     "romaji": "me",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "ぬ",
+      "あ",
+      "の"
+    ]
   },
   {
     "id": 35,
     "kana": "も",
     "romaji": "mo",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "き",
+      "ま"
+    ]
   },
   {
     "id": 36,
     "kana": "や",
     "romaji": "ya",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "か",
+      "せ"
+    ]
   },
   {
     "id": 37,
     "kana": "ゆ",
     "romaji": "yu",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "よ",
+      "ぬ"
+    ]
   },
   {
     "id": 38,
     "kana": "よ",
     "romaji": "yo",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "ろ",
+      "こ"
+    ]
   },
   {
     "id": 39,
     "kana": "ら",
     "romaji": "ra",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "さ",
+      "な"
+    ]
   },
   {
     "id": 40,
     "kana": "り",
     "romaji": "ri",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "い",
+      "ろ"
+    ]
   },
   {
     "id": 41,
     "kana": "る",
     "romaji": "ru",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "ろ",
+      "ぬ"
+    ]
   },
   {
     "id": 42,
     "kana": "れ",
     "romaji": "re",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "ね",
+      "わ"
+    ]
   },
   {
     "id": 43,
     "kana": "ろ",
     "romaji": "ro",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "る",
+      "り"
+    ]
   },
   {
     "id": 44,
     "kana": "わ",
     "romaji": "wa",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "れ",
+      "ね"
+    ]
   },
   {
     "id": 45,
     "kana": "を",
     "romaji": "wo",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "お",
+      "ち"
+    ]
   },
   {
     "id": 46,
     "kana": "ん",
     "romaji": "n",
     "script": "hiragana",
-    "group": "seion"
+    "group": "seion",
+    "confusing": [
+      "え",
+      "そ"
+    ]
   },
   {
     "id": 47,

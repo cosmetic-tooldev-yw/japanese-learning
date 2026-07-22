@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>五十音漸進式測驗</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    background: #1C1C1E;
+    color: #E5E5E7;
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans TC", sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px 16px;
+  }
+
+  /* 頂部標題 */
+  .header {
+    width: 100%;
+    max-width: 380px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  h1 { font-size: 18px; font-weight: 600; margin: 0; color: #E5E5E7; }
+
+  /* 進度條：容器改為 flex，內部由多個色塊依序累積，每一塊代表一題的對錯 */
+  .progress-bar-bg {
+    width: 100%;
+    max-width: 380px;
+    height: 6px;
+    background: #2C2C2E;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 24px;
+    display: flex;
+  }
+  .progress-segment {
+    height: 100%;
+    width: 0%;
+    flex-shrink: 0;
+    transition: width 0.3s ease;
+  }
+  .progress-segment.correct-seg { background: #8FA876; /* 莫蘭迪綠色號，答對 */ }
+  .progress-segment.wrong-seg { background: #C17A4D; /* 莫蘭迪橘色號，答錯 */ }
+
+  /* 題目卡片 */
+  .quiz-card {
+    width: 100%;
+    max-width: 380px;
+    background: #2C2C2E;
+    border: 0.5px solid #3A3A3C;
+    border-radius: 16px;
+    padding: 32px 20px;
+    text-align: center;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+  .quiz-type { font-size: 13px; color: #98989D; margin-bottom: 12px; letter-spacing: 0.05em; }
+  .question-text {
+    font-size: 42px;
+    font-weight: 700;
+    color: #FFFFFF;
+    letter-spacing: 0.08em;
+    min-height: 52px;
+  }
+
+  /* 4 個選擇題按鈕區域 */
+  .options-grid {
+    width: 100%;
+    max-width: 380px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .opt-btn {
+    padding: 16px 10px;
+    background: #2C2C2E;
+    border: 1px solid #3A3A3C;
+    border-radius: 12px;
+    color: #E5E5E7;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: inherit;
+  }
+  .opt-btn:active { transform: scale(0.97); }
+  
+  /* 答題反饋色彩 */
+  .opt-btn.correct { background: #3B5842 !important; border-color: #8FA876 !important; color: #FFF; }
+  .opt-btn.wrong { background: #4A3324 !important; border-color: #C17A4D !important; color: #FFF; } /* 答錯改用橘色 #C17A4D */
+
+  /* 結算畫面 */
+  .result-card {
+    display: none;
+    width: 100%;
+    max-width: 380px;
+    background: #2C2C2E;
+    border-radius: 16px;
+    padding: 32px 20px;
+    text-align: center;
+    border: 0.5px solid #3A3A3C;
+  }
+  .result-score { font-size: 48px; font-weight: 800; color: #8FA876; margin: 12px 0; }
+  .restart-btn {
+    margin-top: 20px;
+    padding: 12px 28px;
+    background: #8FA876; /* 統一使用 #8FA876 */
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>五十音測驗</h1>
+</div>
+
+<div class="progress-bar-bg">
+  <div class="progress-segment correct-seg" id="correctSegment"></div>
+  <div class="progress-segment wrong-seg" id="wrongSegment"></div>
+</div>
+
+<!-- 測驗主區域 -->
+<div id="quizArea" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+  <div class="quiz-card">
+    <div class="quiz-type" id="quizType">第 1 / 10 題</div>
+    <div class="question-text" id="questionText">あ</div>
+  </div>
+
+  <div class="options-grid" id="optionsGrid">
+    <button class="opt-btn">a</button>
+    <button class="opt-btn">i</button>
+    <button class="opt-btn">u</button>
+    <button class="opt-btn">e</button>
+  </div>
+</div>
+
+<!-- 結算區域 -->
+<div class="result-card" id="resultCard">
+  <h2 style="margin: 0; font-size: 20px;">測驗完成</h2>
+  <div class="result-score" id="scoreText">100 分</div>
+  <p style="color: #98989D; font-size: 14px;" id="feedbackText">你的五十音拼讀速度非常快！</p>
+  <button class="restart-btn" id="restartBtn">再挑戰一次</button>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  // 五十音資料統一從 gojuon.json 讀取（與閃卡/總覽表共用同一份資料源）
+  // 依 URL 參數決定要出「平假名」或「片假名」的題目，例如 quiz.html?mode=katakana
+  const urlParams = new URLSearchParams(window.location.search);
+  const quizMode = urlParams.get('mode') || 'hiragana';
+  const dataFile = 'gojuon.json';
+
+  let gojuonData = []; // 由 fetch 載入、篩選、過濾後賦值，初始化前不會被使用
+
+  // 不能放在單字開頭的特殊字（發音防呆）
+  const invalidPrefixes = ['ん', 'っ', 'ー'];
+
+  // 遊戲狀態變數
+  let currentStep = 0;
+  let score = 0;
+  let correctCount = 0; // 累計答對題數，用來計算綠色段落寬度
+  let currentCorrectAnswer = "";
+  let isAnswering = false;
+  let pendingTimeoutId = null;
+
+  // UI 元素存取
+  const quizArea = document.getElementById('quizArea');
+  const resultCard = document.getElementById('resultCard');
+  const questionText = document.getElementById('questionText');
+  const quizType = document.getElementById('quizType');
+  const optionsGrid = document.getElementById('optionsGrid');
+  const correctSegment = document.getElementById('correctSegment');
+  const wrongSegment = document.getElementById('wrongSegment');
+  const scoreText = document.getElementById('scoreText');
+
+  // 隨機抽樣工具函式
+  function getRandomItem(arr) { 
+    return arr[Math.floor(Math.random() * arr.length)]; 
+  }
+  
+  // 安全的洗牌邏輯（高相容性）
+  function shuffleArray(arr) { 
+    var res = arr.slice();
+    for (var i = res.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var temp = res[i];
+      res[i] = res[j];
+      res[j] = temp;
+    }
+    return res;
+  }
+
+  // 生成「可讀發音」的假名組合 (例如 2字/3字)
+  // 同時避免相鄰位置出現疊字（例如 ほほほ），確保每個字都要被獨立認出，維持整串的辨識難度
+  function generateValidKanaWord(charCount) {
+    let kanaWord = "";
+    let romajiWord = "";
+    let prevKana = null;
+    
+    for (let i = 0; i < charCount; i++) {
+      let chosen;
+      let attempts = 0;
+      do {
+        chosen = getRandomItem(gojuonData);
+        attempts++;
+      } while (
+        attempts < 50 &&
+        (
+          (i === 0 && invalidPrefixes.includes(chosen.kana)) ||
+          (prevKana !== null && chosen.kana === prevKana)
+        )
+      );
+
+      kanaWord += chosen.kana;
+      romajiWord += (i === 0 ? "" : "-") + chosen.romaji;
+      prevKana = chosen.kana;
+    }
+    return { kana: kanaWord, romaji: romajiWord };
+  }
+
+  // 取得某個假名的混淆候選字（優先用資料表裡的 confusing，找不到則用同母音字當備援）
+  const seionRows = {
+    a: ["あ","か","さ","た","な","は","ま","や","ら","わ"],
+    i: ["い","き","し","ち","に","ひ","み","り"],
+    u: ["う","く","す","つ","ぬ","ふ","む","ゆ","る"],
+    e: ["え","け","せ","て","ね","へ","め","れ"],
+    o: ["お","こ","そ","と","の","ほ","も","よ","ろ","を"]
+  };
+  const vowelOfKana = {};
+  Object.keys(seionRows).forEach(v => {
+    seionRows[v].forEach(k => { vowelOfKana[k] = v; });
+  });
+
+  function getConfusableFor(kana) {
+    const found = gojuonData.find(item => item.kana === kana);
+    if (found && found.confusing && found.confusing.length > 0) {
+      const validConfusing = found.confusing.filter(c => c !== kana);
+      if (validConfusing.length > 0) return getRandomItem(validConfusing);
+    }
+    // 備援：同母音字（排除自己）
+    const v = vowelOfKana[kana];
+    if (v) {
+      const sameRow = seionRows[v].filter(c => c !== kana);
+      if (sameRow.length > 0) return getRandomItem(sameRow);
+    }
+    // 最終備援：完全隨機（排除自己）
+    let alt;
+    do { alt = getRandomItem(gojuonData).kana; } while (alt === kana);
+    return alt;
+  }
+
+  // 對多字詞做「單點置換」：只挑其中一個位置換成混淆字，其餘不變
+  // 確保換完後羅馬拼音與原本不同，且不會與相鄰位置疊字（避免變相變簡單）
+  function generateSinglePointVariant(originalKanaWord) {
+    const chars = originalKanaWord.split("");
+    let attempts = 0;
+    while (attempts < 30) {
+      attempts++;
+      const posArr = chars.slice();
+      const swapIndex = Math.floor(Math.random() * posArr.length);
+      const originalChar = posArr[swapIndex];
+      const replacement = getConfusableFor(originalChar);
+
+      // 檢查換上去後是否會跟左邊或右邊的字形成疊字
+      const leftNeighbor = swapIndex > 0 ? posArr[swapIndex - 1] : null;
+      const rightNeighbor = swapIndex < posArr.length - 1 ? posArr[swapIndex + 1] : null;
+      if (replacement === leftNeighbor || replacement === rightNeighbor) {
+        continue;
+      }
+
+      posArr[swapIndex] = replacement;
+      const variantKana = posArr.join("");
+      if (variantKana !== originalKanaWord) {
+        const variantRomaji = posArr
+          .map(k => {
+            const item = gojuonData.find(g => g.kana === k);
+            return item ? item.romaji : "";
+          })
+          .join("-");
+        return { kana: variantKana, romaji: variantRomaji };
+      }
+    }
+    // 30次都沒換出不同結果（理論上極少發生），退回完全隨機生成
+    return generateValidKanaWord(chars.length);
+  }
+
+  // 產生題目邏輯
+  function nextQuestion() {
+    if (currentStep >= 10) { showResult(); return; }
+
+    isAnswering = true;
+    currentStep++;
+
+    // 簡化標題：只要第 x / 10 題
+    quizType.textContent = `第 ${currentStep} / 10 題`;
+
+    // 判定當前題目的「字數」：1~4題為1字，5~8題為2字，9~10題為3字大魔王
+    let charCount = 1;
+    if (currentStep >= 5 && currentStep <= 8) charCount = 2;
+    else if (currentStep >= 9) charCount = 3;
+
+    // 判定題型：1~8題隨機「假名選拼音」或「拼音選假名」；9~10題固定「假名選拼音」
+    let mode = (Math.random() > 0.5) ? "kanaToRomaji" : "romajiToKana";
+    if (charCount === 3) mode = "kanaToRomaji";
+
+    // 生成正解
+    const wordObj = generateValidKanaWord(charCount);
+    let qText = "", correctOpt = "";
+
+    if (mode === "kanaToRomaji") {
+      qText = wordObj.kana;
+      correctOpt = wordObj.romaji;
+    } else {
+      qText = wordObj.romaji;
+      correctOpt = wordObj.kana;
+    }
+
+    currentCorrectAnswer = correctOpt;
+    questionText.textContent = qText;
+
+    // 生成 3 個干擾選項
+    let options = [correctOpt];
+    
+    // 安全閥：限制最大嘗試次數，避免混淆池不足或資料異常時陷入無窮迴圈鎖死頁面
+    let safetyCounter = 0;
+    const MAX_ATTEMPTS = 200;
+
+    while (options.length < 4 && safetyCounter < MAX_ATTEMPTS) {
+      safetyCounter++;
+      let dummyWordObj;
+      if (charCount === 1) {
+        // 單字題：直接用混淆字表
+        const targetKana = wordObj.kana;
+        const confKana = getConfusableFor(targetKana);
+        const confObj = gojuonData.find(item => item.kana === confKana);
+        dummyWordObj = confObj ? { kana: confObj.kana, romaji: confObj.romaji } : generateValidKanaWord(charCount);
+      } else {
+        // 多字題（2字/3字）：單點置換，只換其中一個字，逼玩家整串都要認得
+        dummyWordObj = generateSinglePointVariant(wordObj.kana);
+      }
+
+      let dummyOpt = (mode === "kanaToRomaji") ? dummyWordObj.romaji : dummyWordObj.kana;
+      if (!options.includes(dummyOpt)) {
+        options.push(dummyOpt);
+      }
+    }
+
+    // 若因混淆池不足仍未湊滿 4 個選項，改用完全隨機生成補足，保證題目一定能出現
+    // 安全閥：同樣限制最大嘗試次數，避免與現有選項持續衝突時無窮迴圈鎖死頁面
+    let fallbackCounter = 0;
+    const MAX_FALLBACK_ATTEMPTS = 300;
+    while (options.length < 4 && fallbackCounter < MAX_FALLBACK_ATTEMPTS) {
+      fallbackCounter++;
+      const fallbackWordObj = (charCount === 1)
+        ? generateValidKanaWord(charCount)
+        : generateSinglePointVariant(wordObj.kana);
+      const fallbackOpt = (mode === "kanaToRomaji") ? fallbackWordObj.romaji : fallbackWordObj.kana;
+      if (!options.includes(fallbackOpt)) {
+        options.push(fallbackOpt);
+      }
+    }
+
+    // 最終保底：極端情況下仍未湊滿4個選項，直接用「選項X」佔位，確保程式一定能往下執行、絕不鎖死頁面
+    let placeholderIndex = 1;
+    while (options.length < 4) {
+      const placeholder = `選項${placeholderIndex}`;
+      if (!options.includes(placeholder)) {
+        options.push(placeholder);
+      }
+      placeholderIndex++;
+    }
+
+    // 打亂選項並渲染按鈕
+    options = shuffleArray(options);
+    optionsGrid.innerHTML = "";
+    options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'opt-btn';
+      btn.textContent = opt;
+      btn.onclick = function() { checkAnswer(btn, opt); };
+      optionsGrid.appendChild(btn);
+    });
+  }
+
+  // 檢查答案與動畫反饋
+  function checkAnswer(selectedBtn, selectedOpt) {
+    if (!isAnswering) return;
+    isAnswering = false;
+
+    const isCorrect = (selectedOpt === currentCorrectAnswer);
+    const allBtns = optionsGrid.querySelectorAll('.opt-btn');
+
+    if (isCorrect) {
+      score += 10;
+      correctCount++;
+      selectedBtn.classList.add('correct');
+    } else {
+      selectedBtn.classList.add('wrong'); // 錯的格子使用 #C17A4D (橘色)
+      // 標示出正確答案
+      allBtns.forEach(btn => {
+        if (btn.textContent === currentCorrectAnswer) btn.classList.add('correct');
+      });
+    }
+
+    // 依累計答對/答錯題數重新計算兩段寬度：綠色固定在左（答對數），橘色固定在右（答錯數）
+    const wrongCount = currentStep - correctCount;
+    correctSegment.style.width = `${(correctCount / 10) * 100}%`;
+    wrongSegment.style.width = `${(wrongCount / 10) * 100}%`;
+
+    // 1 秒後進入下一題
+    pendingTimeoutId = setTimeout(function() {
+      nextQuestion();
+    }, 1000);
+  }
+
+  // 顯示結果
+  function showResult() {
+    quizArea.style.display = 'none';
+    resultCard.style.display = 'block';
+    scoreText.textContent = `${score} 分`;
+
+    if (score === 100) {
+      document.getElementById('feedbackText').textContent = "太強了！全部答對，你的五十音實力非常堅強！";
+    } else if (score >= 70) {
+      document.getElementById('feedbackText').textContent = "表現不錯喔！再多練幾次就能拿到滿分了！";
+    } else {
+      document.getElementById('feedbackText').textContent = "別灰心！多練習幾遍再來試試！";
+    }
+  }
+
+  // 重新開始
+  document.getElementById('restartBtn').addEventListener('click', function() {
+    if (pendingTimeoutId !== null) {
+      clearTimeout(pendingTimeoutId);
+      pendingTimeoutId = null;
+    }
+    currentStep = 0;
+    score = 0;
+    correctCount = 0;
+    correctSegment.style.width = '0%';
+    wrongSegment.style.width = '0%';
+    quizArea.style.display = 'flex';
+    resultCard.style.display = 'none';
+    nextQuestion();
+  });
+
+  // 載入資料後才啟動測驗；若載入失敗或題庫為空則顯示錯誤訊息，不讓程式在資料缺失狀態下執行
+  fetch(dataFile)
+    .then(res => {
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    })
+    .then(loadedData => {
+      // 篩選出對應文字系統（平假名/片假名）且已標註 confusing 的清音資料
+      // 目前測驗機制僅支援清音（group === 'seion'）；濁音/半濁音/拗音若之後要納入測驗，
+      // 需先在 gojuon.json 對應項目補上 confusing 欄位，這裡的篩選條件才需要放寬
+      const filtered = loadedData.filter(item =>
+        item.script === quizMode &&
+        item.group === 'seion' &&
+        Array.isArray(item.confusing) &&
+        item.confusing.length > 0
+      );
+
+      if (filtered.length === 0) {
+        throw new Error(`找不到「${quizMode}」的可用題庫資料（尚未標註 confusing 欄位）`);
+      }
+
+      gojuonData = filtered;
+      // 初始化啟動第一題
+      correctSegment.style.width = '0%';
+      wrongSegment.style.width = '0%';
+      nextQuestion();
+    })
+    .catch(err => {
+      questionText.textContent = '';
+      quizType.textContent = '資料載入失敗';
+      optionsGrid.innerHTML = '';
+      const errMsg = document.createElement('p');
+      errMsg.style.color = '#98989D';
+      errMsg.style.fontSize = '14px';
+      errMsg.textContent = `無法載入題庫資料（${dataFile}）：${err.message}，請確認檔案存在或重新整理頁面再試一次。`;
+      quizArea.querySelector('.quiz-card').appendChild(errMsg);
+      console.error('五十音資料載入失敗:', err);
+    });
+});
+</script>
+
+</body>
+</html>
