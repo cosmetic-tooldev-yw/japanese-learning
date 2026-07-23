@@ -220,8 +220,8 @@
   </header>
 
   <div class="mode-tabs">
-    <button class="mode-tab active" data-mode="flash">閃卡練習</button>
-    <button class="mode-tab" data-mode="grid">總覽表</button>
+    <button class="mode-tab" data-mode="flash" id="flashTabBtn">閃卡練習</button>
+    <button class="mode-tab" data-mode="grid" id="gridTabBtn">總覽表</button>
     <a class="mode-tab" href="quiz.html" id="quizTab">測驗</a>
   </div>
 
@@ -295,9 +295,20 @@
     </div>
   </div>
 
-  <div id="gridView" class="grid-view" style="display:none;"></div>
+  <div id="gridView" class="grid-view"></div>
 </div>
 <div class="save-indicator" id="saveIndicator">已儲存</div>
+
+<script>
+  // 在畫面渲染出來的當下（不等 DOMContentLoaded、不等資料載入）就先依網址 hash 決定初始顯示狀態，
+  // 避免先閃現「閃卡練習」預設畫面、資料載入完成後才切到「總覽表」的畫面閃爍問題
+  (function setInitialViewBeforeRender() {
+    const isGridView = window.location.hash === '#grid';
+    document.getElementById('gridView').style.display = isGridView ? '' : 'none';
+    document.getElementById('flashView').style.display = isGridView ? 'none' : '';
+    document.getElementById(isGridView ? 'gridTabBtn' : 'flashTabBtn').classList.add('active');
+  })();
+</script>
 
 <script>
 let VOCAB = [];
@@ -310,7 +321,7 @@ let currentIdx = 0;
 let isFlipped = false;
 let shuffleMode = false;
 let saveTimer = null;
-let currentView = "flash";
+let currentView = (window.location.hash === '#grid') ? "grid" : "flash";
 
 const cardArea = document.getElementById("cardArea");
 const scriptFilter = document.getElementById("scriptFilter");
@@ -623,15 +634,15 @@ function renderGrid() {
     { value: "known", label: "已熟悉" }
   ]);
   loadProgress();
-  applyFilters();
-  saveSummary();
 
-  // 若網址帶有 #grid（例如從測驗頁點「總覽表」tab 連過來），資料就緒後自動切換到總覽表 view
-  // 透過模擬點擊「總覽表」按鈕觸發既有切換邏輯，避免另外寫一份重複的畫面切換程式碼
-  if (window.location.hash === '#grid') {
-    const gridTabBtn = document.querySelector('.mode-tab[data-mode="grid"]');
-    if (gridTabBtn) gridTabBtn.click();
+  // 依畫面初始狀態（已在最前面依 hash 設定好）決定要渲染閃卡還是總覽表，
+  // 不再透過模擬點擊按鈕來觸發，避免與已設定好的初始 active 狀態互相衝突造成畫面閃爍
+  if (currentView === "grid") {
+    renderGrid();
+  } else {
+    applyFilters();
   }
+  saveSummary();
 })();
 </script>
 </body>
