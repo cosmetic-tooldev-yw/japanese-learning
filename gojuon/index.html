@@ -625,6 +625,13 @@ function renderGrid() {
   loadProgress();
   applyFilters();
   saveSummary();
+
+  // 若網址帶有 #grid（例如從測驗頁點「總覽表」tab 連過來），資料就緒後自動切換到總覽表 view
+  // 透過模擬點擊「總覽表」按鈕觸發既有切換邏輯，避免另外寫一份重複的畫面切換程式碼
+  if (window.location.hash === '#grid') {
+    const gridTabBtn = document.querySelector('.mode-tab[data-mode="grid"]');
+    if (gridTabBtn) gridTabBtn.click();
+  }
 })();
 </script>
 </body>
