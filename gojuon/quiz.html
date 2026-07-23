@@ -3,31 +3,88 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>五十音漸進式測驗</title>
+<title>五十音練習</title>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#1c1c1e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="五十音練習">
+<link rel="apple-touch-icon" href="../icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="../icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="../icon-512.png">
 <style>
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+  html { background: #1c1c1e; }
   body {
-    margin: 0;
-    background: #1C1C1E;
+    margin: 0; padding: 0; min-height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "PingFang TC", "Segoe UI", sans-serif;
+    background: #1c1c1e;
     color: #E5E5E7;
-    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans TC", sans-serif;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+  }
+
+  /* 與總覽表頁面一致的容器：置中、統一寬度上限、safe-area 邊距 */
+  #app {
+    max-width: 460px;
+    margin: 0 auto;
+    min-height: 100vh;
+    padding: 16px 16px calc(28px + env(safe-area-inset-bottom));
+    padding-top: calc(16px + env(safe-area-inset-top));
+    display: flex;
+    flex-direction: column;
+    background: #1c1c1e;
+  }
+
+  /* 頂部：回上一頁 icon + 大標題 + 副標題（與總覽表頁面共用樣式） */
+  header { text-align: center; padding: 8px 0 4px; position: relative; }
+  .home-btn {
+    position: absolute;
+    left: 0; top: 6px;
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+    border: none;
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .home-btn:active { background: rgba(255,255,255,0.18); }
+  h1 { font-size: 20px; margin: 0; font-weight: 600; letter-spacing: 0.5px; color: #E5E5E7; }
+  .subtitle { font-size: 12px; color: #9a9a9e; margin-top: 4px; }
+
+  /* 切換功能按鈕（閃卡練習/總覽表/測驗），與總覽表頁面共用樣式 */
+  .mode-tabs {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 14px;
+    padding: 4px;
+  }
+  .mode-tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px 4px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #9a9a9e;
+    background: transparent;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+  }
+  .mode-tab.active { background: #fff; color: #1c1c1e; }
+
+  /* 測驗主內容區：維持原本置中版面邏輯 */
+  .quiz-main {
+    margin-top: 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-height: 100vh;
-    padding: 20px 16px;
   }
-
-  /* 頂部標題 */
-  .header {
-    width: 100%;
-    max-width: 380px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 16px;
-  }
-  h1 { font-size: 18px; font-weight: 600; margin: 0; color: #E5E5E7; }
 
   /* 進度條：容器改為 flex，內部由多個色塊依序累積，每一塊代表一題的對錯 */
   .progress-bar-bg {
@@ -122,15 +179,26 @@
 </style>
 </head>
 <body>
+<div id="app">
+  <header>
+    <a class="home-btn" href="index.html" aria-label="回上一頁">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-9 9 9"></path><path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"></path></svg>
+    </a>
+    <h1>五十音練習</h1>
+    <div class="subtitle">ひらがな・カタカナ ・ 進度自動儲存</div>
+  </header>
 
-<div class="header">
-  <h1>五十音測驗</h1>
-</div>
+  <div class="mode-tabs">
+    <a class="mode-tab" href="index.html">閃卡練習</a>
+    <a class="mode-tab" href="index.html#grid">總覽表</a>
+    <button class="mode-tab active" data-mode="quiz">測驗</button>
+  </div>
 
-<div class="progress-bar-bg">
-  <div class="progress-segment correct-seg" id="correctSegment"></div>
-  <div class="progress-segment wrong-seg" id="wrongSegment"></div>
-</div>
+  <div class="quiz-main">
+  <div class="progress-bar-bg">
+    <div class="progress-segment correct-seg" id="correctSegment"></div>
+    <div class="progress-segment wrong-seg" id="wrongSegment"></div>
+  </div>
 
 <!-- 測驗主區域 -->
 <div id="quizArea" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
@@ -154,6 +222,8 @@
   <p style="color: #98989D; font-size: 14px;" id="feedbackText">你的五十音拼讀速度非常快！</p>
   <button class="restart-btn" id="restartBtn">再挑戰一次</button>
 </div>
+  </div><!-- /.quiz-main -->
+</div><!-- /#app -->
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
